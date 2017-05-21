@@ -1,0 +1,17 @@
+django
+elasticsearch
+facebook-sdk
+feedparser
+textblob
+python-twitter
+django-haystack
+mysqlclient
+python3-memcached
+google-api-python-client
+python-amazon-simple-product-api
+clint
+<<<<<<< HEAD
+python-dotenv
+=======
+python-dotenv
+>>>>>>> 3e930e89d4b3fd5a64ea35e6c8ad48b0c6cadbf5
