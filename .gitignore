@@ -23,7 +23,6 @@ src/
 # configs
 *.conf
 *.ini
-*.sh
 monitrc
 
 migrations/
