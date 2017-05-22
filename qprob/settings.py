@@ -72,16 +72,19 @@ SECRET_KEY = environ.get("SECRET_KEY")
 #                 NOT SPECIFIC TO SITE
 #=========================================================================================
 
+SHOW_DEBUG = int(environ.get("SHOW_DEBUG"))
+
 if DEV_ENV:
     DATABASE_USER = environ.get("DEV_DATABASE_USER")
     DATABASE_PASSWORD = environ.get("DEV_DATABASE_PASSWORD")
+    DATABASE_NAME = '{}'.format(environ.get("DEV_DATABASE_NAME"))
 else:
     DATABASE_USER = environ.get("DATABASE_USER")
     DATABASE_PASSWORD = environ.get("DATABASE_PASSWORD")
+    DATABASE_NAME = '{}'.format(environ.get("DATABASE_NAME"))
 
 DEV_PORT = environ.get("DEV_PORT")
 
-DATABASE_NAME = '{}'.format(SITE_FOLDER)
 DATABASE_HOST = environ.get("DB_HOST")
 DATABASE_PORT = int(environ.get("DATABASE_PORT"))
 
@@ -135,10 +138,7 @@ INSTALLED_APPS = [
 
 BASE_URL = DOMAIN
 
-if DEV_ENV:
-    STATICFILES_DIRS = ['static']
-else:
-    STATICFILES_DIRS = []
+STATICFILES_DIRS = []
 
 MEDIA_ROOT = '{}uploads'.format(BASE_DIR)
 STATIC_ROOT = '{}static'.format(BASE_DIR)

@@ -283,10 +283,10 @@ class TwitsByTag(models.Model):
 
 class Post(AutoSlugifyOnSaveModel):
     title = models.CharField(max_length=250, primary_key=True, verbose_name=T("Title"), db_index=True)
-    content = models.TextField(verbose_name=T("Article body"))
-    working_content = models.TextField(verbose_name=T("Temporal article body"), default='')
-    feed_content = models.TextField(verbose_name=T("Content from the feed"), default='')
-    summary =  models.TextField(verbose_name=T("Summary"), default='')
+    content = models.TextField(verbose_name=T("Article body"), default='', null=True, blank=True)
+    working_content = models.TextField(verbose_name=T("Temporal article body"), default='', null=True, blank=True)
+    feed_content = models.TextField(verbose_name=T("Content from the feed"), default='', null=True, blank=True)
+    summary =  models.TextField(verbose_name=T("Summary"), default='', null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name=T("Categoery"))
     feed = models.ForeignKey(Sources, on_delete=models.CASCADE, verbose_name=T("Feed URL"))
     date = models.DateTimeField(verbose_name=T("Date"))

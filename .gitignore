@@ -114,3 +114,8 @@ ENV/
 datadump.json
 *.sqlite3
 *.pdf
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.png

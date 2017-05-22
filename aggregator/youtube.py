@@ -87,10 +87,12 @@ def do_youtube_once(post):
                 channel_title=entry['channel_title'], \
                 channel_id=entry['channel_id'], video_id=entry['video_id'])
             video.save()
-            print("Video inserted to db.")
+            if settings.SHOW_DEBUG:
+                print("Video inserted to db.")
             post.videos.add(entry['title'])
         except Exception as e:
-            print(("[ERROR] At creating video entry: {0}".format(e)))
+            if settings.SHOW_DEBUG:
+                print(("[ERROR] At creating video entry: {0}".format(e)))
 
     return post
 

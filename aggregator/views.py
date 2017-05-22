@@ -349,7 +349,7 @@ if settings.RESEARCH_MODULE:
         from .models import ScienceCat
 
         cats = ScienceCat.objects.all()
-        return render(request, '{}}/science_cats.html'.format(settings.TEMPLATE_NAME)), {'science_cats': cats})
+        return render(request, '{}}/science_cats.html'.format(settings.TEMPLATE_NAME), {'science_cats': cats})
 
 
 if settings.DEFINITIONS_MODULE:
@@ -378,26 +378,26 @@ if settings.DEFINITIONS_MODULE:
             dic.append(d)
 
 
-        return render(request, '{}/terms_dict.html'.format(settings.TEMPLATE_NAME)), {'term_dic': dic})
+        return render(request, '{}/terms_dict.html'.format(settings.TEMPLATE_NAME), {'term_dic': dic})
 
 
 def book_categories_view(request):
     cats = BooksCat.objects.filter(financial=settings.SHOW_BOOKS_ON_THEME)
-    return render(request, '{}/book_cats.html.format(settings.TEMPLATE_NAME)), {'book_cats': cats})
+    return render(request, '{}/book_cats.html'.format(settings.TEMPLATE_NAME), {'book_cats': cats})
 
 
 def sentiment_view(request):
     today = datetime.datetime.now()
     period = datetime.datetime(today.year, today.month, 1) - datetime.timedelta(days=730)
     sentiments = Post.objects.filter(date__gte=period).order_by('date').values('date', 'sentiment')
-    return render(request, '{}/sentiments.html'.format(settings.TEMPLATE_NAME)), {'sentiments': sentiments})
+    return render(request, '{}/sentiments.html'.format(settings.TEMPLATE_NAME), {'sentiments': sentiments})
 
 
 def today_view(request):
     today = datetime.datetime.now()
     period = datetime.datetime(today.year, today.month, today.day) - datetime.timedelta(days=2)
     posts = Post.objects.filter(date__gte=period).order_by('date').reverse() #.values('title', 'sentiment', 'summary', 'image', 'category', 'date', 'url', 'tags', 'slug')
-    return render(request, '{}/today.html'.format(settings.TEMPLATE_NAME)), {'posts': posts})
+    return render(request, '{}/today.html'.format(settings.TEMPLATE_NAME), {'posts': posts})
 
 
 class ArticleDetailView(DetailView):
@@ -457,28 +457,28 @@ class BookDetailView(DetailView):
 class FeedbackCreate(CreateView):
     model = Feedback
     fields = ['name', 'email', 'message']
-    template_name = '{}/feedback_form.html'.format(settings.TEMPLATE_NAME))
+    template_name = '{}/feedback_form.html'.format(settings.TEMPLATE_NAME)
     success_url = reverse_lazy('post_list')
 
 
 class SourceCreate(CreateView):
     model = Sources
     fields = ['name', 'email', 'feed', 'twitter_handle']
-    template_name = '{}/source_form.html'.format(settings.TEMPLATE_NAME))
+    template_name = '{}/source_form.html'.format(settings.TEMPLATE_NAME)
     success_url = reverse_lazy('post_list')
 
 
 def page_not_found(request):
-    return render(request, template_name='{}/404.html'.format(settings.TEMPLATE_NAME)), context=None, content_type=None, status=404, using=None)
+    return render(request, template_name='{}/404.html'.format(settings.TEMPLATE_NAME), context=None, content_type=None, status=404, using=None)
 
 
 def permission_denied(request):
-    return render(request, template_name='{}/403.html'.format(settings.TEMPLATE_NAME)), context=None, content_type=None, status=403, using=None)
+    return render(request, template_name='{}/403.html'.format(settings.TEMPLATE_NAME), context=None, content_type=None, status=403, using=None)
 
 
 def server_error(request):
-    return render(request, template_name='{}/500.html'.format(settings.TEMPLATE_NAME)), context=None, content_type=None, status=500, using=None)
+    return render(request, template_name='{}/500.html'.format(settings.TEMPLATE_NAME), context=None, content_type=None, status=500, using=None)
 
 
 def bad_request(request):
-    return render(request, template_name='{}/400.html'.format(settings.TEMPLATE_NAME)), context=None, content_type=None, status=400, using=None)
+    return render(request, template_name='{}/400.html'.format(settings.TEMPLATE_NAME), context=None, content_type=None, status=400, using=None)

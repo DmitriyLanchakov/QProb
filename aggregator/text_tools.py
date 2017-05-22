@@ -1,6 +1,10 @@
 import re
+from os.path import join
 
 from nltk.corpus import stopwords
+from nltk.tokenize import sent_tokenize
+
+from django.conf import settings
 
 
 def replace_all(text, dic):
@@ -129,3 +133,33 @@ class Autolinker(object):
                                 fullText = leftText + self.replacement.linkHTML(title=matchText) + rightText
                                 self.replaced = True
                                 return fullText
+
+
+def text_cleaner(data):
+    keep_endings = ['.', '?']
+
+    removals_ = open(join(settings.BASE_DIR, "aggregator", 'data', 'stop_sentences.txt'), 'r')
+    removals = [r.replace('\n', '') for r in removals_]
+
+    text = data.split('\n')
+    paragraphs = []
+    for p in text:
+        if len(p) > settings.MINIMUM_PARAGRAPH:
+            paragraphs.append(p)
+
+    paragraphs_ = ""
+    for p in paragraphs:
+        sentence_tokens = sent_tokenize(p)
+        paragraph = ""
+        for sentence in sentence_tokens:
+            if sentence[-1] in keep_endings:
+                    if len(sentence) > settings.MINIMUM_SENTENCE:
+                        #should remove most of the code:
+                        if sentence[0].isupper():
+                            if not any(to_remove in sentence for to_remove in removals):
+                                #eliminate some bad ending strings:
+                                if not sentence.endswith(('e.g.', 'i.e.')):
+                                    paragraph += "{0} ".format(sentence)
+        paragraphs_ +=  "<p>{0}</p>".format(paragraph)
+
+    return paragraphs_

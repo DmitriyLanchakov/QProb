@@ -32,7 +32,7 @@
 		</div>
 	{% endif %}
 
-	{% autoescape off %}<p>{{ object.summary }}</p>{% endautoescape %}
+	{% autoescape off %}<p>{% if object.summary %}{{ object.summary }}{% endif %}</p>{% endautoescape %}
 
 	{% include 'aggregator/share_block.html' %}
 
