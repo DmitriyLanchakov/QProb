@@ -40,6 +40,15 @@ POST_TO_FACEBOOK = int(environ.get("POST_TO_FACEBOOK"))
 SEARCH_TITLE = environ.get("SEARCH_TITLE")
 FIRST_PAGE_TITLE = environ.get("FIRST_PAGE_TITLE")
 ALLOWED_HOSTS = [environ.get("HOST"), "localhost", "127.0.0.1", environ.get("IP")]
+TEMPLATE_NAME = environ.get("TEMPLATE_NAME")
+
+# API
+API_HOST = environ.get("API_HOST")
+API_PORT = int(environ.get("API_PORT"))
+API_WORKERS = int(environ.get("API_WORKERS"))
+API_REDIRECT_TITLE = environ.get("API_REDIRECT_TITLE")
+API_DESCRIPTION_URL = environ.get("API_DESCRIPTION_URL")
+API_HOST = environ.get("API_HOST")
 
 PAGE_ID = environ.get("PAGE_ID")
 ACCESS_TOKEN = environ.get("ACCESS_TOKEN")
@@ -74,7 +83,7 @@ DEV_PORT = environ.get("DEV_PORT")
 
 DATABASE_NAME = '{}'.format(SITE_FOLDER)
 DATABASE_HOST = environ.get("DB_HOST")
-DATABASE_PORT = 3306
+DATABASE_PORT = int(environ.get("DATABASE_PORT"))
 
 if DEV_ENV:
     SESSION_COOKIE_SECURE = False
@@ -121,6 +130,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'aggregator',
     'haystack',
+    'api_server',
 ]
 
 BASE_URL = DOMAIN

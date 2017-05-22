@@ -1,0 +1,33 @@
+{% extends 'aggregator/base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "API" %}{% endblock %}
+
+{% block header %}
+  <h1>{% trans "API" %}</h1>
+{% endblock %}
+
+{% block subtitle %}{% endblock %}
+
+{% block content %}
+<div class="card-block">
+
+  <h3>Access point</h3>
+  <ul>
+    <li>{{ api_domain }}</li>
+  </ul>
+  <h3>Endpoints</h3>
+  <ul>
+    <li>Posts: /posts/</li>
+    <li>Categories: /cats/</li>
+    <li>Posts by category: /posts/&lt;cat_slug&gt;/</li>
+    <li>Post by ID: /post/&lt;slug&gt;</li>
+  </ul>
+  <h3>Formats, methods</h3>
+  <ul>
+    <li>json, get</li>
+  </ul>
+</div>
+
+{% endblock %}

@@ -24,27 +24,29 @@ All websites have their own theme and distribute summarized content through vari
 
 # TODO
 
-* API
-* Drop Anaconda, not needed and too big.
+* ~~API~~
+* Drop full Anaconda, not needed and too big.
+* Async tasks.
 * Interlink.
 * MySQL, uWSGI, nginx, monit configs automation.
 * Archives
 * Redis as cache server.
-* Postgres as db.
+* Postgres as db option.
 * FIX Keywords/tags.
 * Related stories
 * URL shortener for Twitter statuses.
 
-# Issues
+# "Issues"
 
 * Amazon doesn't allow use of their reviews. This feature is experimental.
+* As API requires Sanic, under Windows, Sanic should be built without uvloop.
 
 # History
 
 * 2004-2008. At first it was simple shell script that created websites out from tnohing. It ran over 1000 websites on 5 servers and generated me a home.
 * 2015-2016. Qprob on Wordpress, MongoDB and Python 2.7 backend.
 * 2016+. This one.
- 
+
 # Big Things for far Future
 
 * A.I. generated content and/or images.

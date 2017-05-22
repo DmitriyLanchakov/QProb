@@ -5,10 +5,9 @@ from django.conf.urls.static import static
 from django.conf.urls import (handler400, handler403, handler404, handler500)
 from django.views.decorators.cache import never_cache
 
-#app imports
-from aggregator.views import (ArticleDetailView, ArticleListView, FeedbackCreate, \
-            SourceCreate, VideoListView, TwitsListView, BookListView, BookDetailView,\
-             sentiment_view, today_view, book_categories_view, PostYearArchiveView)
+from aggregator.views import (ArticleDetailView, ArticleListView, FeedbackCreate,
+    SourceCreate, VideoListView, TwitsListView, BookListView, BookDetailView,
+    sentiment_view, today_view, book_categories_view, PostYearArchiveView, api_main)
 from aggregator.feeds import LatestArticlesFeed
 if settings.DEFINITIONS_MODULE:
     from aggregator.views import (terms_dictionary, TermListView)
@@ -48,6 +47,7 @@ urlpatterns = [
     url(r'^{}/sentiment/$'.format(settings.KEYWORD), sentiment_view, name="sentiments"),
     url(r'^{}/today/$'.format(settings.KEYWORD), today_view, name="today"),
     url(r'^{}/search/'.format(settings.KEYWORD), include('haystack.urls')),
+    url(r'^{}/api/$'.format(settings.KEYWORD), api_main, name='api_main'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEFINITIONS_MODULE:
