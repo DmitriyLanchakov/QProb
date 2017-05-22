@@ -36,6 +36,7 @@ config.browser_user_agent = settings.HEADERS['User-Agent']
 config.skip_bad_cleaner = True
 
 #TODO implement optimized images functions: start_opt, del_nonopt, use_opt,...
+# FIXME async functions would break non-refactored functions
 
 
 def feeds_to_db(data):
@@ -119,13 +120,11 @@ def clean_tweet_hashtags():
     tweets = TwitsByTag.objects.all()
     twit_cleaner(tweets)
 
-# TODO refactor
-def posts_to_db(row):
-    print((colored.green("Data for insertion: {0}, {1}".format(row['title'], row['date']))))
 
-    #get category for the post
-    cat = wrap(row['category'], 40)[0]
-    print((colored.green("New category name if changed: {0}".format(cat))))
+async def get_category(c):
+    cat = wrap(c, 40)[0]
+    if settings.SHOW_DEBUG:
+        print(colored.green("New category name if changed: {0}".format(cat)))
 
     try:
         if len(cat) > 0:
@@ -134,61 +133,64 @@ def posts_to_db(row):
             category_ = Category.objects.get(title='Unknown')
     except ObjectDoesNotExist:
         if len(cat) > 0:
-            category_ = Category.objects.create(title=cat, slug='')
+            category_ = Category.objects.create(title=cat)
             category_.save()
         else:
-            category_ = Category.objects.create(title='Unknwon', slug='')
+            category_ = Category.objects.create(title='Unknwon')
             category_.save()
 
-    #get feed for the post
+    return category_
+
+
+async def save_tags(tags, entry):
+    if len(tags) > 0:
+        for tg in tags:
+            try:
+                tag = Tags.objects.get(title=tg)
+            except ObjectDoesNotExist:
+                tag = Tags.objects.create(title=tg)
+                tag.save()
+            entry.tags.add(tag)
+
+
+async def posts_to_db(row):
+    if settings.SHOW_DEBUG:
+        print(colored.green("Data for insertion: {0}, {1}".format(row['title'], row['date'])))
+
+    category_ = await get_category(c=row['category'])
     feed_ = Sources.objects.get(feed=row['feed'])
 
-    #construct the entry
-    try:
-        if len(row['title']) > settings.MINIMUM_TITLE:
-            entry = Post.objects.create(title=row['title'], \
-                url=row['url'], image=row['image_url'],\
-                # movies=row['movie_url'],
-                working_content=row['cleaned_text'], \
-                content=row['cleaned_text'], summary=row['summary'], \
-                date=row['date'], sentiment=row['sentiment'], \
-                category=category_, feed=feed_, feed_content=row['feed_content'], \
-                pub_date=datetime.now())
+    if len(row['title']) > settings.MINIMUM_TITLE:
+        try:
+            entry = Post.objects.create(title=row['title'], url=row['url'], image=row['image_url'],
+                working_content=row['cleaned_text'], content=row['cleaned_text'], summary=row['summary'],
+                date=row['date'], sentiment=row['sentiment'], category=category_, feed=feed_,
+                feed_content=row['feed_content'], pub_date=datetime.now())
 
-            try:
-                if row['tags']:
-                    for tg in row['tags']:
-                        try:
-                            tag = Tags.objects.get(title=tg)
-                        except ObjectDoesNotExist:
-                            tag = Tags.objects.create(title=tg)
-                            tag.save()
-                        entry.tags.add(tag)
-            except Exception as e:
-                print((colored.red("[ERROR] At tag creation: {0}".format(e))))
+            await save_tags(tags=row["tags"], entry=entry)
 
-        if settings.GET_YOUTUBE:
-            print("Going to youtube...")
-            entry = do_youtube_once(entry)
+            if settings.GET_YOUTUBE:
+                print("Going to youtube...")
+                entry = await do_youtube_once(entry=entry)
 
-        entry.save()
-        print((colored.green("Data inserted to db.")))
+            entry.save()
+            print(colored.green("Data inserted to db."))
 
-        if settings.POST_TO_TWITTER:
-            print("Going to Twitter...")
-            post_tweet(row)
+            if settings.POST_TO_TWITTER:
+                print("Going to Twitter...")
+                await post_tweet(row)
 
-        if settings.POST_TO_FACEBOOK:
-            print("Going to Facebook...")
-            face_publish(row)
+            if settings.POST_TO_FACEBOOK:
+                print("Going to Facebook...")
+                await face_publish(row)
 
-        if settings.GET_AMAZON:
-            parse_amazon(title=row['title'])
-    except Exception as e:
-        print((colored.red("[ERROR] At post to db: {0}".format(e))))
+            if settings.GET_AMAZON:
+                await parse_amazon(title=row['title'])
+        except Exception as e:
+            print(colored.red("[ERROR] At post to db: {0}".format(e)))
 
 
-def get_body_from_internet(url):
+async def get_body_from_internet(url):
     article = Article(url, config=config)
     article.download()
     article.parse()
@@ -196,8 +198,7 @@ def get_body_from_internet(url):
     return article
 
 
-# FIXME countless utf-8 errors with this lib
-def summarizer(data, sentences):
+async def summarizer(data, sentences):
     try:
         ss = summarize.SimpleSummarizer()
         summary =  ss.summarize(input_data=data, num_sentences=sentences)
@@ -208,7 +209,7 @@ def summarizer(data, sentences):
     return summary
 
 
-def sentiment(data):
+async def sentiment(data):
     try:
         blob = TextBlob(data)
         sentiment =round(blob.sentiment.polarity, 2)
@@ -379,7 +380,7 @@ def clean_images_if_not_in_db():
             continue
 
 
-def download_image(url):
+async def download_image(url):
     try:
         source = requests.get(url, proxies=settings.PROXIES, headers=settings.HEADERS)
         image_name = url.rsplit('/', 1)[-1].split('?', 1)[0].replace('%', '')
@@ -413,7 +414,8 @@ def download_image(url):
         print(colored.red("At download_image {}".format(e)))
 
 
-def keyword_extractor(data):
+#TODO doersm\t see, tp work, remake
+async def keyword_extractor(data):
     try:
         rake_object = rake.Rake(stop_words_path=join(settings.BASE_DIR, "aggregator", 'data', 'stop_words.txt'), min_char_length=3, max_words_length=2, min_keyword_frequency=3)
         keywords = rake_object.run(data)
@@ -430,7 +432,7 @@ def keyword_extractor(data):
 
 
 # TODO definitely can be better if we knew where content is
-def get_feed_content(data):
+async def get_feed_content(data):
     try:
         feed_content = data.content
     except Exception as e:
@@ -450,10 +452,10 @@ def get_feed_content(data):
     return feed_content
 
 
-def get_image(url):
+async def get_image(url):
     try:
         if len(url):
-            image_name = download_image(url=url)
+            image_name = await download_image(url=url)
         else:
             image_name = None
     except Exception as e:
@@ -462,7 +464,7 @@ def get_image(url):
     return image_name
 
 
-def get_date(data):
+async def get_date(data):
     try:
         dt = datetime.fromtimestamp(mktime(data.published_parsed))
     except Exception as e:
@@ -472,8 +474,7 @@ def get_date(data):
     return dt
 
 
-# TODO async content creation functions
-def content_creation(data, feed, category):
+async def content_creation(data, feed, category):
     row = {}
 
     try:
@@ -482,37 +483,37 @@ def content_creation(data, feed, category):
             row['feed'] = feed
             row['title'] = data.title
             row['url'] = data.link
-            row['feed_content'] = get_feed_content(data=data)
-            body = get_body_from_internet(url=row['url'])
+            row['feed_content'] = await get_feed_content(data=data)
+            body = await get_body_from_internet(url=row['url'])
             if len(body.top_image) > 0:
-                row['image_url'] = get_image(url=body.top_image)
+                row['image_url'] = await get_image(url=body.top_image)
             else:
                 row['image_url'] = None
             if len(body.text) > 0:
                 st = smart_text(body.text[:6000])
                 row['working_content'] = st
-                row['cleaned_text'] = text_cleaner(data=st)
+                row['cleaned_text'] = await text_cleaner(data=st)
             else:
                 row['working_content'] = None
                 row['cleaned_text'] = None
             if not (row['cleaned_text'] is None):
-                row['summary'] = summarizer(data=row['cleaned_text'], sentences=settings.SUMMARIZER_SENTENCES)
+                row['summary'] = await summarizer(data=row['cleaned_text'], sentences=settings.SUMMARIZER_SENTENCES)
             else:
                 row['summary'] = None
             if not (row['working_content'] is None):
-                row['sentiment'] = sentiment(data=row['working_content'])
+                row['sentiment'] = await sentiment(data=row['working_content'])
             else:
                 row['sentiment'] = None
-            row['date'] = get_date(data=data)
+            row['date'] = await get_date(data=data)
             if not (row['cleaned_text'] is None):
                 if len(row['cleaned_text']) > 0:
-                    row['tags'] = keyword_extractor(data=row['cleaned_text'])
+                    row['tags'] = await keyword_extractor(data=row['cleaned_text'])
                 else:
                     row['tags'] = []
             else:
                 row['tags'] = []
 
-            posts_to_db(row=row)
+            await posts_to_db(row=row)
 
     except Exception as e:
         print(colored.red("[ERROR] At content creation: {0}".format(e)))
@@ -530,7 +531,7 @@ async def parse_item(posts, data, feed, category, i):
                     print(colored.green("This article not in db: '{0}'".format(data.entries[i].title)))
                 try:
                     if len(data.entries[i].link) < 150:
-                        content_creation(data=data.entries[i], feed=feed, category=category)
+                        await content_creation(data=data.entries[i], feed=feed, category=category)
                 except Exception as e:
                     print(colored.red("[ERROR] At content cretion iterator: {0}.".format(e)))
                 sleep(settings.DELAY_REQUESTS)
@@ -543,12 +544,11 @@ async def get_data_from_feed(feed, posts, loop):
             items = []
             category = data['feed']['title']
             if len(category) > 0:
-                #loop.run_until_complete(
                 asyncio.gather(*[parse_item(\
                     posts=posts, data=data, feed=feed, category=category, \
                     i=i) for i in range(0, len(data.entries))], \
                     return_exceptions=True
-                )#)
+                )
         else:
             err = data.bozo_exception
             print(colored.red("Feed {0} is malformed: {1}".format(feed, err)))

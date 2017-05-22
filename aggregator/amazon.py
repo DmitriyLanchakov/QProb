@@ -168,7 +168,7 @@ def parse_by_keywords():
             continue
 
 
-def parse_amazon(title):
+async def parse_amazon(title):
     post = Post.objects.get(title=title)
 
     try:

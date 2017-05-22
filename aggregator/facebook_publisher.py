@@ -7,7 +7,7 @@ from clint.textui import colored
 from .models import Post
 
 
-def face_publish(data):
+async def face_publish(data):
     cfg = {
         "page_id"      : settings.PAGE_ID,
         "access_token" : settings.ACCESS_TOKEN

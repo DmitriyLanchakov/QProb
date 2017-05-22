@@ -73,7 +73,7 @@ def youtube_search(q, max_results):
     return videos
 
 
-def do_youtube_once(post):
+async def do_youtube_once(post):
     try:
         res = youtube_search(q=post.title, max_results=25)
     except Exception as e:

@@ -135,7 +135,7 @@ class Autolinker(object):
                                 return fullText
 
 
-def text_cleaner(data):
+async def text_cleaner(data):
     keep_endings = ['.', '?']
 
     removals_ = open(join(settings.BASE_DIR, "aggregator", 'data', 'stop_sentences.txt'), 'r')

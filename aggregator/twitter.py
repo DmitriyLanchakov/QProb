@@ -39,7 +39,8 @@ def get_tweets_by_tag(tag):
         return None
 
 
-def post_tweet(data):
+#TODO refactor this nonsense
+async def post_tweet(data):
     from aggregator.models import Post
     #tags_ = u''
     media_ = None
