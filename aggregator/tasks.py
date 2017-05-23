@@ -83,7 +83,7 @@ async def generate_tweets(source, loop):
 
 
 def tweets_to_db(loop):
-    sources_ = Sources.objects.all().filter(active=True).values('twitter_handle')
+    sources_ = Sources.objects.filter(active=True).values('twitter_handle')
     sources = [s['twitter_handle'] for s in sources_ if not (s['twitter_handle'] == "")]
     sample = random.sample(sources, len(sources))
 
@@ -601,3 +601,19 @@ def sources_to_db():
         except Exception as e:
             print(colored.red(e))
     print(colored.green("Done"))
+
+
+async def check_source(source):
+    posts = Post.objects.filter(feed=source).count()
+    if posts == 0:
+        s = Sources.objects.get(feed=source["feed"])
+        s.active = False
+        s.save()
+
+
+def empty_sources(loop):
+    sources = Sources.objects.filter(active=True)
+
+    loop.run_until_complete(asyncio.gather(*[check_source( source=source)\
+        for source in sources], return_exceptions=True
+    ))
