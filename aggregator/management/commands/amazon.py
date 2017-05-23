@@ -2,7 +2,7 @@ import asyncio
 
 import uvloop
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from aggregator.amazon import (parse_by_categories, parse_by_keywords)
 
 

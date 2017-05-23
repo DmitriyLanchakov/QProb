@@ -138,15 +138,13 @@ if settings.DEFINITIONS_MODULE:
 
 
 class BookListView(ListView):
-
     model = Books
     paginate_by = 20
 
     def get_queryset(self):
-
         query_set = super(BookListView, self).get_queryset()
 
-        main_qs = query_set.filter(categories__financial=settings.SHOW_BOOKS_ON_THEME)
+        main_qs = query_set.filter(categories__enabled=settings.SHOW_BOOKS_ON_THEME)
 
         if self.kwargs:
             try:
@@ -159,7 +157,7 @@ class BookListView(ListView):
 
             try:
                 cat = BooksCat.objects.get(slug=self.cat)
-                return query_set.filter(categories__in=[cat]).reverse()
+                return query_set.filter(categories__in=[cat]).order_by("publication_date").reverse()
             except:
                 return main_qs
 
@@ -170,7 +168,7 @@ class BookListView(ListView):
         context = super(BookListView, self).get_context_data(**kwargs)
 
         #paginator implementation
-        book_lists = Books.objects.all()#.defer("working_content", "feed_content", "feed", "pub_date", "content", 'videos')
+        book_lists = Books.objects.order_by("publication_date").reverse()#.defer("working_content", "feed_content", "feed", "pub_date", "content", 'videos')
 
         paginator = Paginator(book_lists, self.paginate_by)
         page = self.request.GET.get('page')
@@ -382,7 +380,7 @@ if settings.DEFINITIONS_MODULE:
 
 
 def book_categories_view(request):
-    cats = BooksCat.objects.filter(financial=settings.SHOW_BOOKS_ON_THEME)
+    cats = BooksCat.objects.filter(enabled=settings.SHOW_BOOKS_ON_THEME)
     return render(request, '{}/book_cats.html'.format(settings.TEMPLATE_NAME), {'book_cats': cats})
 
 

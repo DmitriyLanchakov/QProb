@@ -66,20 +66,17 @@ class TermLinksAdmin(admin.ModelAdmin):
 if settings.DEFINITIONS_MODULE:
     class TermsAdmin(admin.ModelAdmin):
         list_display = ('term', 'text', 'image', 'movies')
-        #list_filter = ('date', 'by_tag')
         search_fields = ('term', 'text')
 
 
 class VideoAdmin(admin.ModelAdmin):
-    list_display = ('title', 'channel_title', 'slug')
-    #list_filter = ('date', 'by_tag')
+    list_display = ('title', 'channel_title', 'slug', 'description')
     search_fields = ('title', 'description', 'slug')
 
 
 if settings.RESEARCH_MODULE:
     class ScienceArticleAdmin(admin.ModelAdmin):
         list_display = ('title', 'file', 'pdf_url')
-        #list_filter = ('date', 'by_tag')
         search_fields = ('title', 'text', 'pdf_url')
 
 

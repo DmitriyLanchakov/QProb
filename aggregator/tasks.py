@@ -22,11 +22,11 @@ from django.utils.encoding import smart_text, iri_to_uri
 from django.db import IntegrityError
 
 from .models import Sources, Twits, TwitsByTag, Tags, Post, Category
-from . import summarize, rake
+from . import rake
 from .facebook_publisher import face_publish
 from .twitter import post_tweet, twitter_date, get_tweets_by_tag, get_tweets
 from .amazon import parse_amazon
-from .text_tools import replace_all, text_cleaner
+from .text_tools import replace_all, text_cleaner, summarizer
 from textwrap import wrap
 from .youtube import do_youtube_once
 import warnings
@@ -44,26 +44,42 @@ def feeds_to_db(data):
     sources.save()
 
 
-async def save_tweet(entry):
+# TODO solve the problem if handle not in db, but called
+# from somewhere, when should be saved to TwitsByTag
+# this should be unified
+async def get_source_obj(source):
     try:
-        sourc_obj = Sources.objects.get(twitter_handle=entry.user.screen_name)
-        t = Twits.objects.create(tweet_id=entry.id, content=entry.text,
-            twitter_handle=sourc_obj, screen_name=entry.user.name,
-            profile_image=entry.user.profile_image_url, hashtags=entry.hashtags,
-            date=await twitter_date(entry.created_at))
-        t.save()
-        print(colored.green("Tweet cached to db."))
+        source_obj = Sources.objects.get(twitter_handle=source)
+    except:
+        source_obj = None
+    return source_obj
+
+
+async def save_tweet(entry, source):
+    try:
+        if settings.SHOW_DEBUG:
+            print("Twitter handle {}".format(entry.user.screen_name))
+        source_obj = await get_source_obj(source=source)
+        if not (source_obj is None):
+            t = Twits.objects.create(tweet_id=entry.id, content=entry.text,
+                twitter_handle=source_obj, screen_name=entry.user.name,
+                profile_image=entry.user.profile_image_url, hashtags=entry.hashtags,
+                date=await twitter_date(entry.created_at))
+            t.save()
+            print(colored.green("Tweet cached to db."))
     except Exception as e:
-        print(colored.red("Continuing...: {0}").format(e))
+        # TODO filter duplicate errors
+        print(colored.red("At save_tweet {}").format(e))
 
 
 async def generate_tweets(source, loop):
     data = await get_tweets(handle=source)
+
     if not (data is None):
-        asyncio.gather(*[save_tweet(\
-            entry=entry) for entry in data], \
-            return_exceptions=True
-        )
+        if (len(data) > 0):
+            asyncio.gather(*[save_tweet(entry=entry, source=source) for entry in data],
+                return_exceptions=True
+            )
 
 
 def tweets_to_db(loop):
@@ -92,10 +108,11 @@ async def save_tweet_tag(tweet):
 async def generate_tweets_tag():
     tweets = await get_tweets_by_tag(tag=tag)
     if not (tweets is None):
-        asyncio.gather(*[generate_tweets_tag(\
-            tweet=tweet) for tweet in tweets], \
-            return_exceptions=True
-        )
+        if len(tweets) > 0:
+            asyncio.gather(*[generate_tweets_tag(\
+                tweet=tweet) for tweet in tweets], \
+                return_exceptions=True
+            )
 
 
 # TODO this can be improved, definitely has duplicates
@@ -185,12 +202,12 @@ async def posts_to_db(row, loop):
 
             await save_tags(tags=row["tags"], entry=entry)
 
-            if settings.GET_YOUTUBE:
-                print("Going to youtube...")
-                entry = await do_youtube_once(entry=entry)
-
             entry.save()
             print(colored.green("Data inserted to db."))
+
+            if settings.GET_YOUTUBE:
+                print("Going to youtube...")
+                await do_youtube_once(post=entry, loop=loop)
 
             if settings.POST_TO_TWITTER:
                 print("Going to Twitter...")
@@ -212,17 +229,6 @@ async def get_body_from_internet(url):
     article.parse()
 
     return article
-
-
-async def summarizer(data, sentences):
-    try:
-        ss = summarize.SimpleSummarizer()
-        summary =  ss.summarize(input_data=data, num_sentences=sentences)
-    except Exception as e:
-        print(colored.red("At summarizer: {0}".format(e)))
-        summary =  None
-
-    return summary
 
 
 async def sentiment(data):

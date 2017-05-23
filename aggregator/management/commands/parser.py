@@ -5,7 +5,8 @@ import uvloop
 from django.core.management.base import BaseCommand
 
 from aggregator.tasks import (parse_all_feeds, title_cleaner_from_db,
-    clean_images_from_db_if_no_folder)
+    clean_images_from_db_if_no_folder, update_db_with_cleaned_content,
+    clean_images_if_not_in_db)
 
 
 class Command(BaseCommand):

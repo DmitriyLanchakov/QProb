@@ -68,7 +68,7 @@ async def post_tweet(data):
         post = Post.objects.get(title=data['title'])
 
         tags = await get_tags(post=post)
-        media await get_media(post=post)
+        media = await get_media(post=post)
 
         if not (tags is None):
             status = "{0} [{1}]: {2}{3}/ {4}".format(post.title[:80], post.sentiment, settings.DOMAIN, post.slug, tags)

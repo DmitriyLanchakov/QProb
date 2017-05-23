@@ -3,6 +3,7 @@ from os.path import join
 import asyncio
 
 import requests
+from clint.textui import colored
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -11,8 +12,10 @@ from django.utils.html import strip_tags
 
 from .amazon_api import AmazonAPI
 from .models import (Post, Books, BooksCat)
-from .tasks import summarizer
+from . import summarize
 
+#TODO as this requires manual bok cat selection, this should be automatewd
+# -> should dtermine keywords auto and query amazon on them
 
 async def make_summaries(title):
     book = Books.objects.get(title=title)
@@ -131,7 +134,9 @@ async def create_book(product, loop):
 
         await create_categories(product=product, entry=entry, loop=loop)
         entry.save()
-        print("Book saved: {0}".format(product.title))
+        if settings.SHOW_DEBUG:
+            print("Book saved: {0}".format(product.title))
+        #TODO filter duplicate netires errors
     except Exception as e:
         print("[ERROR] At creating book: {0}".format(e))
 
@@ -159,6 +164,18 @@ def parse_by_categories(loop):
     ))
 
 
+async def process_keyword(k, loop):
+    try:
+        products = await query_amazon(query=k, howmuch=100)
+
+        asyncio.gather(*[create_book(\
+            product=product, loop=loop) for product in products], \
+            return_exceptions=True
+        )
+    except Exception as e:
+        print(colored.red("[ERROR] At Amazon process_keyword: {0}".format(e)))
+
+
 #TODO needs normal keyword generator!!!!!
 #FIXME this qwouldn't work now due to intrduction of async
 def parse_by_keywords(loop):
@@ -172,19 +189,10 @@ def parse_by_keywords(loop):
             'investment banking', 'futures market', 'volatility', 'risk management', 'technical analysis', \
             'ETF', 'trading techniques']
 
-    for k in keywords:
-        try:
-            products = await query_amazon(k, 100)
-            for product in products:
-                try:
-                    await create_book(product=product, loop=loop)
-                    print((colored.green("Book included in post: {0}".format(product.title))))
-                except Exception as e:
-                    print(("[ERROR] At Amazon product y keyword: {0}".format(e)))
-                    continue
-        except Exception as e:
-            print(("[ERROR] At Amazon keyword: {0}".format(e)))
-            continue
+    loop.run_until_complete(asyncio.gather(*[process_keyword(\
+        k=k, loop=loop) for k in keywords], \
+        return_exceptions=True
+    ))
 
 
 async def add_books_to_posts(product, post, loop):
@@ -199,11 +207,11 @@ async def add_books_to_posts(product, post, loop):
         print("[ERROR] at Amazon add_books_to_posts: {0}".format(e))
 
 
+#TODO there is a problem qwhen nothing found on Amazon, maybe something better may be thought than just searching fore article titles
 async def parse_amazon(title, loop):
     post = Post.objects.get(title=title)
 
     try:
-        print(smart_text(post.title))
         products = await query_amazon(query=post.title, howmuch=10)
 
         asyncio.gather(*[add_books_to_posts(\

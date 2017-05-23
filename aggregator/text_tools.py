@@ -3,8 +3,11 @@ from os.path import join
 
 from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize
+from clint.textui import colored
 
 from django.conf import settings
+
+from . import summarize
 
 
 def replace_all(text, dic):
@@ -163,3 +166,14 @@ async def text_cleaner(data):
         paragraphs_ +=  "<p>{0}</p>".format(paragraph)
 
     return paragraphs_
+
+
+async def summarizer(data, sentences):
+    try:
+        ss = summarize.SimpleSummarizer()
+        summary =  ss.summarize(input_data=data, num_sentences=sentences)
+    except Exception as e:
+        print(colored.red("At summarizer: {0}".format(e)))
+        summary =  None
+
+    return summary
