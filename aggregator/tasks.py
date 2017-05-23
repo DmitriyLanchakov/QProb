@@ -13,6 +13,7 @@ import feedparser
 from newspaper import Article, Config
 from textblob import TextBlob
 from clint.textui import colored
+from bs4 import BeautifulSoup
 
 from django.db import connection
 from django.conf import settings
@@ -36,7 +37,6 @@ config.browser_user_agent = settings.HEADERS['User-Agent']
 config.skip_bad_cleaner = True
 
 #TODO implement optimized images functions: start_opt, del_nonopt, use_opt,...
-# FIXME async functions would break non-refactored functions
 
 
 def feeds_to_db(data):
@@ -44,81 +44,97 @@ def feeds_to_db(data):
     sources.save()
 
 
-def tweets_to_db():
+async def save_tweet(entry):
+    try:
+        sourc_obj = Sources.objects.get(twitter_handle=entry.user.screen_name)
+        t = Twits.objects.create(tweet_id=entry.id, content=entry.text,
+            twitter_handle=sourc_obj, screen_name=entry.user.name,
+            profile_image=entry.user.profile_image_url, hashtags=entry.hashtags,
+            date=await twitter_date(entry.created_at))
+        t.save()
+        print(colored.green("Tweet cached to db."))
+    except Exception as e:
+        print(colored.red("Continuing...: {0}").format(e))
+
+
+async def generate_tweets(source, loop):
+    data = await get_tweets(handle=source)
+    if not (data is None):
+        asyncio.gather(*[save_tweet(\
+            entry=entry) for entry in data], \
+            return_exceptions=True
+        )
+
+
+def tweets_to_db(loop):
     sources_ = Sources.objects.all().filter(active=True).values('twitter_handle')
-
-    sources = []
-    for s in sources_:
-        if not (s['twitter_handle'] == ''):
-            sources.append(s['twitter_handle'])
-
+    sources = [s['twitter_handle'] for s in sources_ if not (s['twitter_handle'] == "")]
     sample = random.sample(sources, len(sources))
-    print((colored.yellow("Samples count {0} out from {1}sources".format(len(sample), len(sources)))))
 
-    for source in sample:
-        print((colored.green("Twitter handle: {0}".format(source))))
-        data = get_tweets(source)
-        if data is None:
-            break
-
-        for entry in data:
-            try:
-                sourc_obj = Sources.objects.get(twitter_handle=entry.user.screen_name)
-                t = Twits.objects.create(tweet_id=entry.id, content=entry.text, \
-                        twitter_handle=sourc_obj, screen_name=entry.user.name, \
-                        profile_image=entry.user.profile_image_url, hashtags=entry.hashtags, \
-                        date=twitter_date(entry.created_at))
-                t.save()
-                print((colored.green("Tweet cached to db.")))
-            except Exception as e:
-                print((colored.red("Continuing...: {0}").format(e)))
-                continue
+    loop.run_until_complete(asyncio.gather(*[generate_tweets(\
+        source=source, loop=loop) for source in sample], \
+        return_exceptions=True
+    ))
 
 
-def tweets__by_tag_to_db():
+async def save_tweet_tag(tweet):
+    try:
+        t = TwitsByTag.objects.create(tweet_id=tweet.id, content=tweet.text,
+            twitter_handle=tweet.user.screen_name, screen_name=tweet.user.name,
+            profile_image=tweet.user.profile_image_url, hashtags=tweet.hashtags,
+            date=await twitter_date(tweet.created_at), by_tag=tag)
+        t.save()
+        print(colored.green("Tweet inserted into db."))
+    except Exception as e:
+        print(colored.red("At tweetes by tag to db {0}".format(e)))
+
+
+async def generate_tweets_tag():
+    tweets = await get_tweets_by_tag(tag=tag)
+    if not (tweets is None):
+        asyncio.gather(*[generate_tweets_tag(\
+            tweet=tweet) for tweet in tweets], \
+            return_exceptions=True
+        )
+
+
+# TODO this can be improved, definitely has duplicates
+def tweets__by_tag_to_db(loop):
     tags = Tags.objects.filter(type='T').filter(financial=True)
 
-    for tag in tags:
-        print((colored.green("Processing tag: {0}".format(tag))))
-        tweets = get_tweets_by_tag(tag)
-        if tweets is None:
-            break
+    loop.run_until_complete(asyncio.gather(*[generate_tweets_tag(\
+        tag=tag, loop=loop) for tag in tags], \
+        return_exceptions=True
+    ))
 
-        for tweet in tweets:
+
+async def clean_tweet(tweet, replacements):
+    for each in tweet.hashtags.split('Hashtag'):
+        if 'Text' in each:
+            hashtag = replace_all(each.split('Text=')[1], replacements)
             try:
-                t = TwitsByTag.objects.create(tweet_id=tweet.id, content=tweet.text, \
-                    twitter_handle=tweet.user.screen_name, screen_name=tweet.user.name, \
-                    profile_image=tweet.user.profile_image_url, hashtags=tweet.hashtags, \
-                    date=twitter_date(tweet.created_at), by_tag=tag)
-                t.save()
-                print((colored.green("Tweet inserted into db.")))
+                tweet.tags.add(hashtag)
+                tag = Tags.objects.create(title=hashtag, type='T')
+                tag.save()
+                print("Tag {0} saved.".format(hashtag))
             except Exception as e:
-                print((colored.red("Continuing...: {0}".format(e))))
-                continue
+                print("TAt tag cleaner {0} with {1}.".format(e, hashtag))
 
 
-def twit_cleaner(tweets):
+def twit_cleaner(tweets, loop):
     replacements = { "u'": "", ")": "", "]": "", "'": "", ",": ""}
-    for tweet in tweets:
-        for each in tweet.hashtags.split('Hashtag'):
-            if 'Text' in each:
-                hashtag = replace_all(each.split('Text=')[1], replacements)
-                try:
-                    tweet.tags.add(hashtag)
-                    tag = Tags.objects.create(title=hashtag, type='T')
-                    tag.save()
-                    print(("Tag {0} saved.".format(hashtag)))
-                except Exception as e:
-                    print(("This tag {0} already exists.".format(hashtag)))
-                    print(e)
-                    continue
+
+    loop.run_until_complete(asyncio.gather(*[clean_tweet(\
+        tweet=tweet, replacements=replacements) for tweet in tweets], \
+        return_exceptions=True
+    ))
 
 
-def clean_tweet_hashtags():
+def clean_tweet_hashtags(loop):
     tweets = Twits.objects.all()
-    twit_cleaner(tweets)
+    twit_cleaner(tweets=tweets, loop=loop)
     tweets = TwitsByTag.objects.all()
-    twit_cleaner(tweets)
+    twit_cleaner(tweets=tweets, loop=loop)
 
 
 async def get_category(c):
@@ -153,7 +169,7 @@ async def save_tags(tags, entry):
             entry.tags.add(tag)
 
 
-async def posts_to_db(row):
+async def posts_to_db(row, loop):
     if settings.SHOW_DEBUG:
         print(colored.green("Data for insertion: {0}, {1}".format(row['title'], row['date'])))
 
@@ -178,14 +194,14 @@ async def posts_to_db(row):
 
             if settings.POST_TO_TWITTER:
                 print("Going to Twitter...")
-                await post_tweet(row)
+                await post_tweet(data=row)
 
             if settings.POST_TO_FACEBOOK:
                 print("Going to Facebook...")
                 await face_publish(row)
 
             if settings.GET_AMAZON:
-                await parse_amazon(title=row['title'])
+                await parse_amazon(title=row['title'], loop=loop)
         except Exception as e:
             print(colored.red("[ERROR] At post to db: {0}".format(e)))
 
@@ -266,17 +282,22 @@ def remake_summaries_from_content():
             print((colored.red("[ERROR] At remake summaries: {0}".format(e))))
 
 
-def update_db_with_cleaned_content():
+async def update_item(article):
+    try:
+        entry = Post.objects.get(title=article.title)
+        entry.content = await text_cleaner(data=entry.working_content)
+        entry.save()
+    except Exception as e:
+        print(colored.red("[ERROR] At update db with cleaned content;ea: {0}".format(e)))
+
+
+def update_db_with_cleaned_content(loop):
     articles = Post.objects.all()
 
-    for article in articles:
-        entry = Post.objects.get(title=article.title)
-
-        try:
-            entry.content = text_cleaner(entry.working_content)
-            entry.save()
-        except Exception as e:
-            print((colored.red("[ERROR] At update db with cleaned content;ea: {0}".format(e))))
+    loop.run_until_complete(asyncio.gather(*[update_item(\
+        article=article) for article in articles], \
+        return_exceptions=True
+    ))
 
 
 def update_wrong_image_urls():
@@ -294,90 +315,74 @@ def update_wrong_image_urls():
         print((colored.green("Renamed image from {0} to {1} in folder.".format(original_filename, new_filename))))
 
 
-def content_if_empty_all():
-    from bs4 import BeautifulSoup
-
-    empty_posts = Post.objects.raw("SELECT * FROM aggregator_post WHERE LENGTH(working_content) < 50")
-
-    for e in empty_posts:
-        try:
-            if len(e.working_content) < 50 and len(e.feed_content) > 50:
-                soup = BeautifulSoup(e.feed_content)
-                text = ''.join(soup.findAll(text=True))
-                e.content = text_cleaner(text)
-                e.summary = summarizer(data=text, sentences=settings.SUMMARIZER_SENTENCES)
-                e.sentiment = sentiment(text)
-                e.parsed = True
-                e.save()
-                print((colored.green("Empty post updated with feed content: {0}".format(e.title))))
-            else:
-                e.content = ""
-                e.summary = ""
-                e.parsed = True
-                e.save()
-        except Exception as e:
-            print((colored.red("[ERROR] At content if emtpy [all] : {0}".format(e))))
-            continue
-
-
-def content_if_empty(data):
-    from bs4 import BeautifulSoup
-
+async def check_post(e):
     try:
-        e = Post.objects.get(title=data)
-        if len(e.working_content) < 50 and len(e.feed_content) > 50:
+        #if content from feed is betetr than acquired from web
+        if (len(e.working_content) < 50) & (len(e.feed_content) > 50):
             soup = BeautifulSoup(e.feed_content)
             text = ''.join(soup.findAll(text=True))
-            e.content = text_cleaner(text)
-            e.summary = summarizer(data=text, sentences=settings.SUMMARIZER_SENTENCES)
-            e.sentiment = sentiment(text)
+            e.content = await text_cleaner(data=text)
+            e.summary = await summarizer(data=text, sentences=settings.SUMMARIZER_SENTENCES)
+            e.sentiment = await sentiment(data=text)
             e.parsed = True
             e.save()
-            print(("Empty post updated with feed content: {0}".format(e.title)))
+            print(colored.green("Empty post updated with feed content: {0}".format(e.title)))
         else:
+            #empty everyhing otherwise
             e.content = ""
             e.summary = ""
             e.parsed = True
             e.save()
     except Exception as e:
-        print((colored.red("[ERROR] At content if emtpy : {0}".format(e))))
+        print(colored.red("[ERROR] At content if emtpy [all] : {0}".format(e)))
 
 
-def clean_images_from_db_if_no_folder():
+def content_if_empty_all(loop):
+    empty_posts = Post.objects.raw("SELECT * FROM aggregator_post WHERE LENGTH(working_content) < 50")
+
+    loop.run_until_complete(asyncio.gather(*[check_post(\
+        e=e) for e in empty_posts], \
+        return_exceptions=True
+    ))
+
+
+async def check_img(filenames, post):
+    if not (post.image in filenames):
+        if (not (post.image == "")) | (not (post.image is None)):
+            print(colored.red("Image not in folder: {0}".format(post.image)))
+            post.image = None
+            post.save()
+
+
+def clean_images_from_db_if_no_folder(loop):
     path = join(settings.BASE_DIR, 'uploads')
-    print(colored.green("Path: {0}".format(path)))
-
     filenames = ["uploads/{0}".format(f) for f in listdir(path) if isfile(join(path, f))]
-
     posts = Post.objects.all()
 
-    i = 0
-    for post in posts:
-        if not (post.image in filenames):
-            if not (post.image == ''):
-                print((colored.red("Image not in folder: {0}".format(post.image))))
-                post.image = None
-                post.save()
-        else:
-            print((colored.green("Image in folder: {0}".format(post.image))))
+    loop.run_until_complete(asyncio.gather(*[check_img(\
+        filenames=filenames, post=post) for post in posts], \
+        return_exceptions=True
+    ))
 
 
-def clean_images_if_not_in_db():
+async def check_db(fle):
+    try:
+        post = Post.objects.get(image='uploads/{0}'.format(fle))
+    except:
+        print(colored.green("File not in db: {0}".format(fle)))
+        filename = join(settings.BASE_DIR, 'uploads', fle)
+        remove(filename)
+        print("Removed {0}".format(filename))
+
+
+def clean_images_if_not_in_db(loop):
     path = filename = join(settings.BASE_DIR, 'uploads')
-    print((colored.green("Path: {0}".format(path))))
-
     filenames = [f for f in listdir(path) if isfile(join(path, f))]
 
-    for file in filenames:
-        try:
-            post = Post.objects.get(image='uploads/{0}'.format(file))
-            print((colored.green("File exists in db: {0}".format(post.image))))
-        except:
-            print((colored.green("File not in db: {0}".format(file))))
-            filename = join(settings.BASE_DIR, 'uploads', file)
-            remove(filename)
-            print((colored.green("Removed {0}".format(filename))))
-            continue
+    loop.run_until_complete(asyncio.gather(*[check_db(\
+        fle=fle) for fle in filenames], \
+        return_exceptions=True
+    ))
 
 
 async def download_image(url):
@@ -474,7 +479,7 @@ async def get_date(data):
     return dt
 
 
-async def content_creation(data, feed, category):
+async def content_creation(data, feed, category, loop):
     row = {}
 
     try:
@@ -513,13 +518,13 @@ async def content_creation(data, feed, category):
             else:
                 row['tags'] = []
 
-            await posts_to_db(row=row)
+            await posts_to_db(row=row, loop=loop)
 
     except Exception as e:
         print(colored.red("[ERROR] At content creation: {0}".format(e)))
 
 
-async def parse_item(posts, data, feed, category, i):
+async def parse_item(posts, data, feed, category, i, loop):
     try:
         post = posts.get(title=data.entries[i].title)
         if settings.SHOW_DEBUG:
@@ -531,7 +536,7 @@ async def parse_item(posts, data, feed, category, i):
                     print(colored.green("This article not in db: '{0}'".format(data.entries[i].title)))
                 try:
                     if len(data.entries[i].link) < 150:
-                        await content_creation(data=data.entries[i], feed=feed, category=category)
+                        await content_creation(data=data.entries[i], feed=feed, category=category, loop=loop)
                 except Exception as e:
                     print(colored.red("[ERROR] At content cretion iterator: {0}.".format(e)))
                 sleep(settings.DELAY_REQUESTS)
@@ -546,7 +551,7 @@ async def get_data_from_feed(feed, posts, loop):
             if len(category) > 0:
                 asyncio.gather(*[parse_item(\
                     posts=posts, data=data, feed=feed, category=category, \
-                    i=i) for i in range(0, len(data.entries))], \
+                    i=i, loop=loop) for i in range(0, len(data.entries))], \
                     return_exceptions=True
                 )
         else:

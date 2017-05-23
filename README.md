@@ -26,7 +26,7 @@ All websites have their own theme and distribute summarized content through vari
 
 * ~~API~~
 * Drop full Anaconda, not needed and too big.
-* Async tasks.
+* ~~Async tasks.~~
 * Interlink.
 * MySQL, uWSGI, nginx, monit configs automation.
 * Archives

@@ -142,7 +142,7 @@ class BooksCat(AutoSlugifyOnSaveModel):
     id = models.IntegerField(verbose_name=T("ID"))
     title = models.CharField(max_length=150, primary_key=True, verbose_name=T("Book category"), db_index=True)
     slug = models.CharField(max_length=50, blank=True, null=True)
-    financial = models.BooleanField(default=0, verbose_name=T("Do show?"))
+    enabled = models.BooleanField(default=0, verbose_name=T("Do show?"))
 
     def __unicode__(self):
         return '%s' %(self.title)

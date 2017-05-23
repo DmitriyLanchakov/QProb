@@ -7,6 +7,19 @@ from clint.textui import colored
 from .models import Post
 
 
+async def get_ttachment(post, data):
+    attachment =  {
+        'name': data['title'],
+        'link': '{0}{1}/'.format(settings.DOMAIN, post.slug),
+        'description': strip_tags(post.summary)
+    }
+
+    if post.image:
+        attachment['picture'] = '{0}{1}'.format(settings.DOMAIN, post.image)
+
+    return attachment
+
+
 async def face_publish(data):
     cfg = {
         "page_id"      : settings.PAGE_ID,
@@ -20,25 +33,14 @@ async def face_publish(data):
 
     post = Post.objects.get(title=data['title'])
 
-    if post.image:
-        attachment =  {
-            'name': data['title'],
-            'link': '{0}{1}/'.format(settings.DOMAIN, post.slug),
-            'description': strip_tags(post.summary),
-            'picture': '{0}{1}'.format(settings.DOMAIN, post.image)
-        }
-    else:
-        attachment =  {
-            'name': data['title'],
-            'link': '{0}{1}/'.format(settings.DOMAIN, post.slug),
-            'description': strip_tags(post.summary)
-        }
+    attachment =  await get_ttachment(post=post, data=data)
 
     try:
         status = api.put_wall_post(message=post.title, attachment=attachment)
-        print((colored.green("Published to Facebook: {0}".format(post.title))))
+        if settings.SHOW_DEBUG:
+            print(colored.green("Published to Facebook: {0}".format(post.title)))
     except Exception as e:
-        print((colored.red("[ERROR] At Facebook publish: {0}".format(e))))
+        print(colored.red("[ERROR] At Facebook publish: {0}".format(e)))
 
 def get_api(cfg):
     graph = facebook.GraphAPI(cfg['access_token'])
