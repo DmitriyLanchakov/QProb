@@ -3,7 +3,7 @@ from django.db.models import Count
 
 from .models import (Category, Post)
 
-
+        
 def extra_context(request):
     cats = Category.objects.all()
 

@@ -11,6 +11,7 @@ from django.conf import settings
 from django.utils.text import slugify
 from django.views.generic.dates import YearArchiveView
 from django.core.urlresolvers import reverse_lazy
+from django.db.models import Avg
 
 from .models import (Post, Tags, Sources, Category, Tags, Feedback, Twits, \
         TwitsByTag, Video, Books, BooksCat)
@@ -386,8 +387,14 @@ def book_categories_view(request):
 
 def sentiment_view(request):
     today = datetime.datetime.now()
-    period = datetime.datetime(today.year, today.month, 1) - datetime.timedelta(days=730)
-    sentiments = Post.objects.filter(date__gte=period).order_by('date').values('date', 'sentiment')
+    period = datetime.datetime(today.year, today.month, 1) - datetime.timedelta(days=252)
+    sentiments_obj = Post.objects.filter(date__gte=period)
+    avg = sentiments_obj.aggregate(Avg('sentiment'))
+    sentiments = [{"date": s["date"], "sentiment": \
+        (float(s["sentiment"]) - avg["sentiment__avg"]) } for s \
+        in sentiments_obj.order_by('date').values('date', \
+        'sentiment')]
+
     return render(request, '{}/sentiments.html'.format(settings.TEMPLATE_NAME), {'sentiments': sentiments})
 
 
