@@ -35,8 +35,8 @@ class LatestArticlesFeed(Feed):
         return "{0}{1}/".format(settings.DOMAIN, item.slug)
 
     def item_description(self, item):
-        text = strip_tags(item.summary)
-        return text
+        text = item.summary or ""
+        return strip_tags(text)
 
     def item_enclosure_url(self, item):
         try:
