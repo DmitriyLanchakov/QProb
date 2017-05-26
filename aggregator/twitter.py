@@ -45,8 +45,10 @@ async def get_tweets_by_tag(tag):
 
 async def get_tags(post):
     try:
-        tags_ = "".join(["#{0} ".format(tag) for tag in post.tags])[:20]
-        print(tags_)
+        if post.tags.all().count() > 0:
+            tags_ = "".join(["#{0} ".format(tag) for tag in post.tags])[:20]
+        else:
+            tags_ = None
     except Exception as e:
         print(colored.red("At twitter get_tags {}".format(e)))
         tags_ = None
@@ -69,19 +71,19 @@ async def post_tweet(data):
 
         tags = await get_tags(post=post)
         media = await get_media(post=post)
+        sentiment = post.sentiment or "N/A"
 
         if not (tags is None):
-            status = "{0} [{1}]: {2}{3}/ {4}".format(post.title[:80], post.sentiment, settings.DOMAIN, post.slug, tags)
+            status = "{0} [{1}]: {2}{3}/ {4}".format(post.title[:80], sentiment, settings.DOMAIN, post.slug, tags)
         else:
-            status = "{0} [{1}]: {2}{3}/".format(post.title[:80], post.sentiment, settings.DOMAIN, post.slug)
+            status = "{0} [{1}]: {2}{3}/".format(post.title[:80], sentiment, settings.DOMAIN, post.slug)
 
         if not (media is None):
             api.PostUpdate(status=status, media=media)
         else:
             api.PostUpdate(status=status, media=None)
 
-        if settings.SHOW_DEBUG:
-            print(colored.green("Sent tweet {}.".format(status)))
+        print(colored.green("Sent tweet {}.".format(status)))
 
     except Exception as e:
         print(colored.red("At Twitter post: {0}".format(e)))

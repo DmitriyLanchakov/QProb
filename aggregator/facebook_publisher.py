@@ -10,10 +10,12 @@ from .models import Post
 async def get_ttachment(post, data):
     attachment =  {
         'name': data['title'],
-        'link': '{0}{1}/'.format(settings.DOMAIN, post.slug),
-        'description': strip_tags(post.summary)
+        'link': '{0}{1}/'.format(settings.DOMAIN, post.slug)
     }
 
+    sentiment = str(post.sentiment) or "N/A"
+    summary = post.summary or ""
+    attachment['description'] = strip_tags(summary) + " " + sentiment
     if post.image:
         attachment['picture'] = '{0}{1}'.format(settings.DOMAIN, post.image)
 
@@ -21,26 +23,22 @@ async def get_ttachment(post, data):
 
 
 async def face_publish(data):
-    cfg = {
-        "page_id"      : settings.PAGE_ID,
-        "access_token" : settings.ACCESS_TOKEN
-    }
-
     try:
+        cfg = {
+            "page_id"      : settings.PAGE_ID,
+            "access_token" : settings.ACCESS_TOKEN
+        }
+
         api = get_api(cfg)
-    except Exception as e:
-        print((colored.red("[ERROR] At Facebook API!: {0}".format(e))))
 
-    post = Post.objects.get(title=data['title'])
+        post = Post.objects.get(title=data['title'])
 
-    attachment =  await get_ttachment(post=post, data=data)
+        attachment =  await get_ttachment(post=post, data=data)
 
-    try:
         status = api.put_wall_post(message=post.title, attachment=attachment)
-        if settings.SHOW_DEBUG:
-            print(colored.green("Published to Facebook: {0}".format(post.title)))
+        print(colored.green("Published to Facebook: {0}".format(post.title)))
     except Exception as e:
-        print(colored.red("[ERROR] At Facebook publish: {0}".format(e)))
+        print(colored.red("At Facebook publish: {0}".format(e)))
 
 def get_api(cfg):
     graph = facebook.GraphAPI(cfg['access_token'])

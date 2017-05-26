@@ -48,7 +48,10 @@ urlpatterns = [
     url(r'^{}/today/$'.format(settings.KEYWORD), today_view, name="today"),
     url(r'^{}/search/'.format(settings.KEYWORD), include('haystack.urls')),
     url(r'^{}/api/$'.format(settings.KEYWORD), api_main, name='api_main'),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+if settings.DEV_ENV:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEFINITIONS_MODULE:
     urlpatterns += [url(r'^{}/definitions/$'.format(settings.KEYWORD), terms_dictionary, name='terms_dictionary'),

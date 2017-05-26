@@ -24,11 +24,11 @@ async def save_video(entry, post):
             channel_id=entry['channel_id'], video_id=entry['video_id'])
         video.save()
         #TODO filter out duplicate errors
-    except Exception as e:
-        print("[ERROR] At updating post: {0}".format(e))
 
-    post.videos.add(entry['title'])
-    post.save()
+        post.videos.add(entry['title'])
+        post.save()
+    except Exception as e:
+        print("[ERROR] At save video: {0}".format(e))
 
 
 async def youtube_date(value):

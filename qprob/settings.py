@@ -85,7 +85,10 @@ else:
 
 DEV_PORT = environ.get("DEV_PORT")
 
-DATABASE_HOST = environ.get("DB_HOST")
+if DEV_ENV:
+    DATABASE_HOST = environ.get("DEV_DB_HOST")
+else:
+    DATABASE_HOST = environ.get("DB_HOST")
 DATABASE_PORT = int(environ.get("DATABASE_PORT"))
 
 if DEV_ENV:
@@ -156,11 +159,11 @@ if (not DEV_ENV) | CACHE_ENABLED:
             'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
             'LOCATION': '{}:11211'.format(environ.get("IP")),
             #LOCATION': [
-                #'172.19.26.240:11211',
-                #'172.19.26.242:11211',
+                #'12.19.26.20:11211',
+                #'12.19.26.22:11211',
             #]
             #'LOCATION': 'unix:/tmp/memcached.sock',
-            'TIMEOUT': 10000, #3 hours
+            'TIMEOUT': 43200, #12 hours
             #'OPTIONS': {
                 #'MAX_ENTRIES': 20000
             #}

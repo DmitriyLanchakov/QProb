@@ -215,7 +215,7 @@ async def posts_to_db(row, loop):
 
             if settings.POST_TO_FACEBOOK:
                 print("Going to Facebook...")
-                await face_publish(row)
+                await face_publish(data=row)
 
             if settings.GET_AMAZON:
                 await parse_amazon(title=row['title'], loop=loop)
@@ -432,7 +432,7 @@ async def keyword_extractor(data):
         keywords = rake_object.run(data)
 
         keywords_ = []
-        if keywords:
+        if len(keywords) > 0:
             for k in keywords:
                 keywords_.append(k[0])
     except Exception as e:

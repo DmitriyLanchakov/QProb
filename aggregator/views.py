@@ -244,13 +244,12 @@ class VideoListView(ListView):
 
 
 class TwitsListView(ListView):
-
     model = Twits
-    paginate_by = 20
+    paginate_by = 50
 
     def get_queryset(self):
 
-        query_set = super(TwitsListView, self).get_queryset()
+        query_set = super(TwitsListView, self).get_queryset()[:5000]
 
         main_qs = query_set.order_by('date').reverse()
 
@@ -294,10 +293,10 @@ class TwitsListView(ListView):
 
 class ArticleListView(ListView):
     model = Post
-    paginate_by = 20
+    paginate_by = 25
     def get_queryset(self):
         query_set = super(ArticleListView, self).get_queryset()
-        main_qs = query_set.order_by('date').reverse()
+        main_qs = query_set.order_by('date').reverse()[:2000]
         if self.kwargs:
             try:
                 self.tag = self.kwargs['tag_slug']
@@ -325,6 +324,7 @@ class ArticleListView(ListView):
         posts_lists = Post.objects.defer("working_content", "feed_content", "feed", "pub_date", "content", 'videos')
         paginator = Paginator(posts_lists, self.paginate_by)
         page = self.request.GET.get('page')
+
         try:
             posts = paginator.page(page)
         except PageNotAnInteger:

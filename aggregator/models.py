@@ -231,7 +231,7 @@ class Sources(models.Model):
     email = models.EmailField(max_length=60, verbose_name=T("Your email"), blank=True, null=True)
     feed = models.URLField(verbose_name=T("Feed URL"), primary_key=True)
     twitter_handle = models.CharField(max_length=30, verbose_name=T("Twitter handle"), blank=True, null=True)
-    active =  models.BooleanField(default=1)
+    active =  models.BooleanField(default=False)
 
     def __unicode__(self):
         return '(%s) %s %s' %(self.feed, self.twitter_handle, self.name)

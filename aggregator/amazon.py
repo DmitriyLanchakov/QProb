@@ -25,7 +25,7 @@ async def make_summaries(title):
         book.save()
         print("Amazon summary saved to database: {0}".format(book.summary))
     except Exception as e:
-        print("[ERROR] At Amazon summary: {0}".format(e))
+        print(colored.red("[ERROR] At Amazon summary: {0}".format(e)))
 
 
 async def download_image(url):
@@ -57,7 +57,7 @@ async def generate_images(book):
                 book.save()
                 print("Amazon image saved to database book: {0}".format(book.title))
     except Exception as e:
-        print("At Amazon generate_images {}".format(e))
+        print(colored.red("At Amazon generate_images {}".format(e)))
 
 
 async def get_amazon_images(loop):
@@ -70,13 +70,13 @@ async def get_amazon_images(loop):
 
 
 async def query_amazon(query, howmuch):
+    products = []
     try:
         time.sleep(10)
         amazon = AmazonAPI(settings.AMAZON_ACCESS_KEY, settings.AMAZON_SECRET_KEY, settings.AMAZON_ASSOC_TAG)
         products = amazon.search(Keywords=query, SearchIndex='Books', n=howmuch)
     except Exception as e:
-        print("[ERROR] at querying Amazon: {0}".format(e))
-        products = []
+        print(colored.red("[ERROR] at querying Amazon: {0}".format(e)))
 
     return products
 
@@ -88,17 +88,22 @@ async def save_cat(c, product, entry):
     except ObjectDoesNotExist:
         cat = BooksCat.objects.create(id=product.browse_nodes[c].id, title=product.browse_nodes[c].name)
         cat.save()
-        print("Book category saved: {0}".format(product.browse_nodes[c].name))
+        print(colored.green("Book category saved: {0}".format(product.browse_nodes[c].name)))
+    except Exception as e:
+        print(colored.green("At save_cat: {}".format(e)))
 
     entry.categories.add(cat)
-    print("Book category added to book: {0}".format(product.browse_nodes[c].name))
+    print("Book category added to book {}".format(product.browse_nodes[c].name))
 
 
-async def create_categories(product, entry, loop):
-    asyncio.gather(*[save_cat(\
-        c=c, product=product, entry=entry) for c in range(0, len(product.browse_nodes))], \
-        return_exceptions=True
-    )
+async def create_categories(product, entry):
+    try:
+        asyncio.gather(*[save_cat(\
+            c=c, product=product, entry=entry) for c in range(0, len(product.browse_nodes))], \
+            return_exceptions=True
+        )
+    except Exception as e:
+        print(colored.red("At create_categories {}".format(e)))
 
 
 async def get_authors(product):
@@ -126,19 +131,22 @@ async def create_book(product, loop):
         authors = await get_authors(product=product)
         image = await get_image(product=product)
 
-        entry = Books.objects.create(title=product.title, asin=product.asin,
-            authors=authors, publication_date=product.publication_date,
-            pages=product.pages, medium_image_url=image,
-            price=product.list_price[0], currency=product.list_price[1],
-            review=product.editorial_review)
+        if (not (authors is None)) & (not (image is None)):
+            entry = Books.objects.create(title=product.title, asin=product.asin,
+                authors=authors, publication_date=product.publication_date,
+                pages=product.pages, medium_image_url=image,
+                price=product.list_price[0], currency=product.list_price[1],
+                review=product.editorial_review)
 
-        await create_categories(product=product, entry=entry, loop=loop)
-        entry.save()
-        if settings.SHOW_DEBUG:
-            print("Book saved: {0}".format(product.title))
-        #TODO filter duplicate netires errors
+            await create_categories(product=product, entry=entry)
+
+            if settings.SHOW_DEBUG:
+                print(colored.green("Book saved: {0}".format(product.title)))
+            entry.save()
+            return entry
+            #TODO filter duplicate netires errors
     except Exception as e:
-        print("[ERROR] At creating book: {0}".format(e))
+        print(colored.red("[ERROR] At creating book: {0}".format(e)))
 
 
 async def generate_amazon(cat, loop):
@@ -147,10 +155,11 @@ async def generate_amazon(cat, loop):
 
         products = await query_amazon(query=cat.title, howmuch=100)
 
-        asyncio.gather(*[create_book(\
-            product=product, loop=loop) for i, product in enumerate(products)], \
-            return_exceptions=True
-        )
+        if len(products) > 0:
+            asyncio.gather(*[create_book(\
+                product=product, loop=loop) for i, product in enumerate(products)], \
+                return_exceptions=True
+            )
     except Exception as e:
         print("At Amazon by category {}".format(e))
 
@@ -168,10 +177,11 @@ async def process_keyword(k, loop):
     try:
         products = await query_amazon(query=k, howmuch=100)
 
-        asyncio.gather(*[create_book(\
-            product=product, loop=loop) for product in products], \
-            return_exceptions=True
-        )
+        if len(products) > 0:
+            asyncio.gather(*[create_book(\
+                product=product, loop=loop) for product in products], \
+                return_exceptions=True
+            )
     except Exception as e:
         print(colored.red("[ERROR] At Amazon process_keyword: {0}".format(e)))
 
@@ -197,14 +207,14 @@ def parse_by_keywords(loop):
 
 async def add_books_to_posts(product, post, loop):
     try:
-        entry = await create_book(product=product, loop=loop)
+        entry = await create_book(product=product, post=post, loop=loop)
         post.books.add(entry)
         post.got_books = True
         post.save()
-        print("Book included in post: {0}".format(product.title))
+        print(colored.green("Book included in post: {0}".format(product.title)))
         await make_summaries(title=entry.title)
     except Exception as e:
-        print("[ERROR] at Amazon add_books_to_posts: {0}".format(e))
+        print(colored.red("[ERROR] at Amazon add_books_to_posts: {0}".format(e)))
 
 
 #TODO there is a problem qwhen nothing found on Amazon, maybe something better may be thought than just searching fore article titles
@@ -214,10 +224,11 @@ async def parse_amazon(title, loop):
     try:
         products = await query_amazon(query=post.title, howmuch=10)
 
-        asyncio.gather(*[add_books_to_posts(\
-            product=product, post=post, loop=loop) for i, product in enumerate(products)], \
-            return_exceptions=True
-        )
+        if len(products) > 0:
+            asyncio.gather(*[add_books_to_posts(\
+                product=product, post=post, loop=loop) for i, product in enumerate(products)], \
+                return_exceptions=True
+            )
 
         await get_amazon_images(loop=loop)
     except Exception as e:
