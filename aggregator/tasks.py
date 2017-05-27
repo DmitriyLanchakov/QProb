@@ -294,7 +294,7 @@ async def update_item(article):
         entry.content = await text_cleaner(data=entry.working_content)
         entry.save()
     except Exception as e:
-        print(colored.red("[ERROR] At update db with cleaned content;ea: {0}".format(e)))
+        print(colored.red("[ERROR] At update db with cleaned content {}".format(e)))
 
 
 def update_db_with_cleaned_content(loop):
@@ -432,7 +432,7 @@ async def keyword_extractor(data):
         keywords = rake_object.run(data)
 
         keywords_ = []
-        if len(keywords) > 0:
+        if not (keywords is None):
             for k in keywords:
                 keywords_.append(k[0])
     except Exception as e:

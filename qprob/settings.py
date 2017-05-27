@@ -13,10 +13,16 @@ load_dotenv(join(BASE_PATH, '.env'))
 DEV_ENV  = int(environ.get("DEV_ENV"))
 
 SITE_ID = 1
+EXISTING_SITE = int(environ.get("EXISTING_SITE"))
 SITE_NAME = environ.get("SITE_NAME")
 SHORT_SITE_NAME = environ.get("SHORT_SITE_NAME")
 SITE_FOLDER = environ.get("SITE_FOLDER")
-DOMAIN = environ.get("DOMAIN")
+if DEV_ENV:
+    BASE_URL = environ.get("DEV_BASE_URL")
+else:
+    BASE_URL = environ.get("BASE_URL")
+HOST = environ.get("HOST")
+IP = environ.get("IP")
 KEYWORD = environ.get("KEYWORD")
 SITE_THEME = environ.get("SITE_THEME")
 FEED_DESCRIPTION = 'Latest (5 days) of news on {}.'.format(SITE_THEME)
@@ -39,16 +45,8 @@ POST_TO_TWITTER = int(environ.get("POST_TO_TWITTER"))
 POST_TO_FACEBOOK = int(environ.get("POST_TO_FACEBOOK"))
 SEARCH_TITLE = environ.get("SEARCH_TITLE")
 FIRST_PAGE_TITLE = environ.get("FIRST_PAGE_TITLE")
-ALLOWED_HOSTS = [environ.get("HOST"), "localhost", "127.0.0.1", environ.get("IP")]
+ALLOWED_HOSTS = [HOST, "localhost", "127.0.0.1", IP]
 TEMPLATE_NAME = environ.get("TEMPLATE_NAME")
-
-# API
-API_HOST = environ.get("API_HOST")
-API_PORT = int(environ.get("API_PORT"))
-API_WORKERS = int(environ.get("API_WORKERS"))
-API_REDIRECT_TITLE = environ.get("API_REDIRECT_TITLE")
-API_DESCRIPTION_URL = environ.get("API_DESCRIPTION_URL")
-API_HOST = environ.get("API_HOST")
 
 PAGE_ID = environ.get("PAGE_ID")
 ACCESS_TOKEN = environ.get("ACCESS_TOKEN")
@@ -136,10 +134,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'aggregator',
     'haystack',
-    'api_server',
 ]
-
-BASE_URL = DOMAIN
 
 STATICFILES_DIRS = []
 
@@ -157,7 +152,7 @@ if (not DEV_ENV) | CACHE_ENABLED:
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-            'LOCATION': '{}:11211'.format(environ.get("IP")),
+            'LOCATION': '{}:11211'.format(IP),
             #LOCATION': [
                 #'12.19.26.20:11211',
                 #'12.19.26.22:11211',
@@ -194,7 +189,7 @@ DEBUG = DEV_ENV
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
-        'URL': 'http://{}:9200/'.format(environ.get("IP")),
+        'URL': 'http://{}:9200/'.format(IP),
         'INDEX_NAME': '{}_idx'.format(SITE_FOLDER),
     },
 }
@@ -232,7 +227,7 @@ def load_user_agents(uafile=join(BASE_PATH, 'user_agents.txt')):
 HEADERS = {
     "Connection" : "close",
     'User-Agent': choice(load_user_agents()),
-    'referer': DOMAIN,
+    'referer': BASE_URL,
 }
 
 PROXIES_LIST = ['97.77.104.22:80']

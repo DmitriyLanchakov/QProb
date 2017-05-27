@@ -44,6 +44,9 @@
 	            <a class="nav-item nav-link" href="{{ base_url }}/{{ keyword }}/definitions/">{% trans "Define" %}</a>
 	          </li>
 						{% endif %}
+						<li class="nav-item{% if request.path == '/{{ keyword }}/api/'%} active{% endif %}">
+	            <a class="nav-item nav-link" href="{{ base_url }}/{{ keyword }}/api/">{% trans "API" %}</a>
+	          </li>
 	          <li class="nav-item{% if request.path == '/{{ keyword }}/add/'%} active{% endif %}">
 	            <a class="nav-item nav-link" href="{{ base_url }}/{{ keyword }}/add/">{% trans "Add your blog" %}</a>
 	          </li>

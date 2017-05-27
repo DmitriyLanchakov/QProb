@@ -25,7 +25,8 @@ if settings.DEFINITIONS_MODULE:
 #TODO refactor
 
 def api_main(request):
-    return render(request, '{}/api.html'.format(settings.TEMPLATE_NAME), {'api_domain': settings.API_HOST })
+    api_host = "api.{}".format(settings.HOST)
+    return render(request, '{}/api.html'.format(settings.TEMPLATE_NAME), {'api_domain': api_host })
 
 class PostYearArchiveView(YearArchiveView):
     queryset = Post.objects.all()

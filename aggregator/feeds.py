@@ -20,7 +20,7 @@ class LatestArticlesFeed(Feed):
     description = settings.FEED_DESCRIPTION
 
     def items(self):
-        return Post.objects.filter(date__gte=(datetime.now() - timedelta(days=3))).order_by('date').reverse()
+        return Post.objects.filter(date__gte=(datetime.now() - timedelta(days=3))).order_by('date').reverse()[:50]
 
     def item_title(self, item):
         return item.title

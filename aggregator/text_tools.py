@@ -139,31 +139,35 @@ class Autolinker(object):
 
 
 async def text_cleaner(data):
-    keep_endings = ['.', '?']
-
-    removals_ = open(join(settings.BASE_DIR, "aggregator", 'data', 'stop_sentences.txt'), 'r')
-    removals = [r.replace('\n', '') for r in removals_]
-
-    text = data.split('\n')
-    paragraphs = []
-    for p in text:
-        if len(p) > settings.MINIMUM_PARAGRAPH:
-            paragraphs.append(p)
-
     paragraphs_ = ""
-    for p in paragraphs:
-        sentence_tokens = sent_tokenize(p)
-        paragraph = ""
-        for sentence in sentence_tokens:
-            if sentence[-1] in keep_endings:
-                    if len(sentence) > settings.MINIMUM_SENTENCE:
-                        #should remove most of the code:
-                        if sentence[0].isupper():
-                            if not any(to_remove in sentence for to_remove in removals):
-                                #eliminate some bad ending strings:
-                                if not sentence.endswith(('e.g.', 'i.e.')):
-                                    paragraph += "{0} ".format(sentence)
-        paragraphs_ +=  "<p>{0}</p>".format(paragraph)
+    try:
+        keep_endings = ['.', '?']
+
+        removals_ = open(join(settings.BASE_DIR, "aggregator", 'data', 'stop_sentences.txt'), 'r')
+        removals = [r.replace('\n', '') for r in removals_]
+
+        if not (data is None):
+            text = data.split('\n')
+            paragraphs = []
+            for p in text:
+                if len(p) > settings.MINIMUM_PARAGRAPH:
+                    paragraphs.append(p)
+
+            for p in paragraphs:
+                sentence_tokens = sent_tokenize(p)
+                paragraph = ""
+                for sentence in sentence_tokens:
+                    if sentence[-1] in keep_endings:
+                            if len(sentence) > settings.MINIMUM_SENTENCE:
+                                #should remove most of the code:
+                                if sentence[0].isupper():
+                                    if not any(to_remove in sentence for to_remove in removals):
+                                        #eliminate some bad ending strings:
+                                        if not sentence.endswith(('e.g.', 'i.e.')):
+                                            paragraph += "{0} ".format(sentence)
+                paragraphs_ +=  "<p>{0}</p>".format(paragraph)
+    except Exception as e:
+        print(colored.red("At text_cleaner {}".format(e)))
 
     return paragraphs_
 

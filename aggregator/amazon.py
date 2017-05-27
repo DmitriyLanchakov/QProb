@@ -224,7 +224,7 @@ async def parse_amazon(title, loop):
     try:
         products = await query_amazon(query=post.title, howmuch=10)
 
-        if len(products) > 0:
+        if products:
             asyncio.gather(*[add_books_to_posts(\
                 product=product, post=post, loop=loop) for i, product in enumerate(products)], \
                 return_exceptions=True
