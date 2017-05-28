@@ -32,7 +32,17 @@
 		</div>
 	{% endif %}
 
-	{% autoescape off %}<p>{% if object.summary %}{{ object.summary }}{% endif %}</p>{% endautoescape %}
+	{% autoescape off %}<p>
+{% if object.feed.dead %}
+		{% if object.content %}
+			{{ object.content }}
+		{% else %}
+				{% if object.summary %}{{ object.summary }}{% endif %}
+		{% endif %}</p>
+{% else %}
+		{% if object.summary %}{{ object.summary }}{% endif %}</p>
+{% endif %}
+{% endautoescape %}
 
 	{% include 'aggregator/share_block.html' %}
 
@@ -131,7 +141,9 @@
 	<div class="card bg-inverse bg-primary text-xs-center">
 		<div class="card-block">
 			<blockquote class="card-blockquote">
-				<h5 class="display-5"><a href="{{ object.url }}" class="text-info">Read @{{ object.category }}</a> - {{ object.date }}</h5>
+				<h5 class="display-5">{% if object.feed.dead %}@{{ object.category }} isn't responding, this is cached copy from <a href="{{ base_url }}/">{{ first_page_title }}</a>*.
+				{% else %}<a href="{{ object.url }}" class="text-info">Read @{{ object.category }}</a>{% endif %}- {{ object.date }}</h5>
+				<p><small>* If we have it.</small></p>
 			</blockquote>
 		</div>
 	</div>

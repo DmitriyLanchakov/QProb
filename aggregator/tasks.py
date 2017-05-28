@@ -18,7 +18,7 @@ from bs4 import BeautifulSoup
 from django.db import connection
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.utils.encoding import smart_text, iri_to_uri
+from django.utils.encoding import iri_to_uri
 from django.db import IntegrityError
 
 from .models import Sources, Twits, TwitsByTag, Tags, Post, Category
@@ -196,7 +196,7 @@ async def posts_to_db(row, loop):
     if len(row['title']) > settings.MINIMUM_TITLE:
         try:
             entry = Post.objects.create(title=row['title'], url=row['url'], image=row['image_url'],
-                working_content=row['cleaned_text'], content=row['cleaned_text'], summary=row['summary'],
+                working_content=row['working_content'], content=row['cleaned_text'], summary=row['summary'],
                 date=row['date'], sentiment=row['sentiment'], category=category_, feed=feed_,
                 feed_content=row['feed_content'], pub_date=datetime.now())
 
@@ -353,11 +353,14 @@ def content_if_empty_all(loop):
 
 
 async def check_img(filenames, post):
-    if not (post.image in filenames):
-        if (not (post.image == "")) | (not (post.image is None)):
-            print(colored.red("Image not in folder: {0}".format(post.image)))
-            post.image = None
-            post.save()
+    try:
+        if not (post.image in filenames):
+            if (not (post.image == "")) | (not (post.image is None)):
+                post.image = None
+                post.save()
+                print(colored.green("Updated image as : {0}".format(post.image)))
+    except Exception as e:
+        print(colored.red("At check_img {}".format(e)))
 
 
 def clean_images_from_db_if_no_folder(loop):
@@ -407,8 +410,6 @@ async def download_image(url):
         print("img")
         print(img)
         image_name = img.split(".")[-2][:100] + "." + img.split(".")[-1]
-        print("image_name")
-        print(image_name)
         filename = join(settings.BASE_DIR, 'uploads', image_name)
 
         post = Post.objects.filter(image="uploads/{0}".format(image_name)).count()
@@ -515,8 +516,7 @@ async def content_creation(data, feed, category, loop):
             else:
                 row['image_url'] = None
             if len(body.text) > 0:
-                st = smart_text(body.text[:6000])
-                row['working_content'] = st
+                row['working_content'] = body.text
                 row['cleaned_text'] = await text_cleaner(data=st)
             else:
                 row['working_content'] = None
@@ -636,5 +636,24 @@ def empty_sources(loop):
     sources = Sources.objects.filter(active=True)
 
     loop.run_until_complete(asyncio.gather(*[check_source( source=source)\
+        for source in sources], return_exceptions=True
+    ))
+
+
+async def check_status(source):
+    try:
+        r = requests.get(source.feed)
+        if r.status_code != 200:
+           source.dead = True
+           source.active = False
+           source.save()
+    except Exception as e:
+        print(colored.red("At live_status {}".format(e)))
+
+
+def feed_status_checker(loop):
+    sources = Sources.objects.filter(active=True)
+
+    loop.run_until_complete(asyncio.gather(*[check_status(source=source) \
         for source in sources], return_exceptions=True
     ))

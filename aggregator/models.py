@@ -98,7 +98,11 @@ class AutoSlugifyOnSaveVideoModel(models.Model):
 
 if settings.RESEARCH_MODULE:
     class ScienceCat(AutoSlugifyOnSaveModel):
-        title = models.CharField(max_length=250, verbose_name=T("Article title"), primary_key=True)
+        if not settings.EXISTING_SITE:
+            id = models.AutoField(primary_key=True)
+            title = models.CharField(max_length=250, verbose_name=T("Article title"), unique=True)
+        else:
+            title = models.CharField(max_length=250, verbose_name=T("Article title"), primary_key=True)
         slug = models.CharField(max_length=140, verbose_name=T("Category slug"), blank=True, null=True)
 
         class Meta:
@@ -112,7 +116,11 @@ if settings.RESEARCH_MODULE:
 
 
     class ScienceArticle(AutoSlugifyOnSaveModel):
-        title = models.CharField(max_length=250, verbose_name=T("Article title"), primary_key=True)
+        if not settings.EXISTING_SITE:
+            id = models.AutoField(primary_key=True)
+            title = models.CharField(max_length=250, verbose_name=T("Article title"), unique=True)
+        else:
+            title = models.CharField(max_length=250, verbose_name=T("Article title"), primary_key=True)
         text = models.TextField(default='', verbose_name=T("Article text"))
         summary = models.TextField(default='', verbose_name=T("Article summary"))
         sentiment = models.DecimalField(max_digits=3, decimal_places=2, blank=True, null=True, verbose_name=T("Sentiment"))
@@ -134,7 +142,11 @@ if settings.RESEARCH_MODULE:
             return '%s' %(self.title)
 
 class BooksCat(AutoSlugifyOnSaveModel):
-    title = models.CharField(max_length=150, verbose_name=T("Book category"), primary_key=True)
+    if not settings.EXISTING_SITE:
+        id = models.AutoField(primary_key=True)
+        title = models.CharField(max_length=150, verbose_name=T("Book category"), unique=True)
+    else:
+        title = models.CharField(max_length=150, verbose_name=T("Book category"), primary_key=True)
     slug = models.CharField(max_length=50, blank=True, null=True)
     enabled = models.BooleanField(default=0, verbose_name=T("Do show?"))
 
@@ -146,7 +158,11 @@ class BooksCat(AutoSlugifyOnSaveModel):
 
 
 class Books(AutoSlugifyOnSaveModel):
-    title = models.CharField(max_length=250, verbose_name=T("Book title"), primary_key=True)
+    if not settings.EXISTING_SITE:
+        id = models.AutoField(primary_key=True)
+        title = models.CharField(max_length=250, verbose_name=T("Book title"), unique=True)
+    else:
+        title = models.CharField(max_length=250, verbose_name=T("Book title"), primary_key=True)
     asin = models.CharField(max_length=20, verbose_name=T("ASIN"))
     authors = models.CharField(max_length=200, verbose_name=T("Authors"))
     publication_date = models.DateTimeField(verbose_name=T("Date"), null=True, blank=True)
@@ -169,7 +185,11 @@ class Books(AutoSlugifyOnSaveModel):
 
 
 class Video(AutoSlugifyOnSaveVideoModel):
-    title = models.CharField(max_length=140, verbose_name=T("Video"), primary_key=True)
+    if not settings.EXISTING_SITE:
+        id = models.AutoField(primary_key=True)
+        title = models.CharField(max_length=140, verbose_name=T("Video"), unique=True)
+    else:
+        title = models.CharField(max_length=140, verbose_name=T("Video"), primary_key=True)
     description = models.TextField(default='')
     date = models.DateTimeField(verbose_name=T("Date"))
     channel_title = models.CharField(max_length=140, verbose_name=T("Channel title"))
@@ -188,7 +208,11 @@ class Video(AutoSlugifyOnSaveVideoModel):
 
 
 class Category(AutoSlugifyOnSaveModel):
-    title = models.CharField(max_length=40, verbose_name=T("Categoery"), primary_key=True)
+    if not settings.EXISTING_SITE:
+        id = models.AutoField(primary_key=True)
+        title = models.CharField(max_length=40, verbose_name=T("Categoery"), unique=True)
+    else:
+        title = models.CharField(max_length=40, verbose_name=T("Categoery"), primary_key=True)
     slug = models.CharField(max_length=40, blank=True, null=True)
 
     class Meta:
@@ -208,7 +232,11 @@ class Tags(AutoSlugifyOnSaveModel):
         ('D', 'Database tag collector'),
         ('G', 'Google Adwords'),
     )
-    title = models.CharField(max_length=30, verbose_name=T("Tag"), primary_key=True)
+    if not settings.EXISTING_SITE:
+        id = models.AutoField(primary_key=True)
+        title = models.CharField(max_length=30, verbose_name=T("Tag"), unique=True)
+    else:
+        title = models.CharField(max_length=30, verbose_name=T("Tag"), primary_key=True)
     slug = models.CharField(max_length=30, blank=True, null=True)
     active = models.BooleanField(default=0)
     tag_type = models.CharField(max_length=10, verbose_name=T("Tag type"), choices=TAG_TYPES, default='A',)
@@ -221,11 +249,16 @@ class Tags(AutoSlugifyOnSaveModel):
 
 
 class Sources(models.Model):
-    feed = models.URLField(verbose_name=T("Feed URL"), primary_key=True)
+    if not settings.EXISTING_SITE:
+        id = models.AutoField(primary_key=True)
+        feed = models.URLField(verbose_name=T("Feed URL"), unique=True)
+    else:
+        feed = models.URLField(verbose_name=T("Feed URL"), primary_key=True)
     name = models.CharField(max_length=40, verbose_name=T("Your name"), blank=True, null=True)
     email = models.EmailField(max_length=60, verbose_name=T("Your email"), blank=True, null=True)
     twitter_handle = models.CharField(max_length=30, verbose_name=T("Twitter handle"), blank=True, null=True)
     active =  models.BooleanField(default=False)
+    dead = models.BooleanField(default=False)
     failures = models.SmallIntegerField(verbose_name=T("Failures"), default=0)
 
     def __unicode__(self):
@@ -277,7 +310,11 @@ class TwitsByTag(models.Model):
 
 
 class Post(AutoSlugifyOnSaveModel):
-    title = models.CharField(max_length=250, primary_key=True, verbose_name=T("Title"))
+    if not settings.EXISTING_SITE:
+        id = models.AutoField(primary_key=True)
+        title = models.CharField(max_length=250, unique=True, verbose_name=T("Title"))
+    else:
+        title = models.CharField(max_length=250, primary_key=True, verbose_name=T("Title"))
     content = models.TextField(verbose_name=T("Article body"), default='', null=True, blank=True)
     working_content = models.TextField(verbose_name=T("Temporal article body"), default='', null=True, blank=True)
     feed_content = models.TextField(verbose_name=T("Content from the feed"), default='', null=True, blank=True)
@@ -351,7 +388,11 @@ if settings.DEFINITIONS_MODULE:
         status_parsed = models.CharField(max_length=5, verbose_name=T("Status"), choices=LINK_STATUSES, default='U')
 
     class Terms(models.Model):
-        term =  models.CharField(max_length=60, verbose_name=T("Term"), primary_key=True)
+        if not settings.EXISTING_SITE:
+            id = models.AutoField(primary_key=True)
+            term =  models.CharField(max_length=60, verbose_name=T("Term"), unique=True)
+        else:
+            term =  models.CharField(max_length=60, verbose_name=T("Term"), primary_key=True)
         text =  models.TextField(verbose_name=T("Term description"))
         summary =  models.TextField(verbose_name=T("Summary"), null=True, blank=True)
         image =  models.CharField(max_length=140, verbose_name=T("Image"))

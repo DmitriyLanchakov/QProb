@@ -321,7 +321,6 @@ class ArticleListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(ArticleListView, self).get_context_data(**kwargs)
-        #paginator implementation
         posts_lists = Post.objects.defer("working_content", "feed_content", "feed", "pub_date", "content", 'videos')
         paginator = Paginator(posts_lists, self.paginate_by)
         page = self.request.GET.get('page')

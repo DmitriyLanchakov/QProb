@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 
 from aggregator.tasks import (parse_all_feeds, title_cleaner_from_db,
     clean_images_from_db_if_no_folder, update_db_with_cleaned_content,
-    clean_images_if_not_in_db)
+    clean_images_if_not_in_db, feed_status_checker)
 
 
 class Command(BaseCommand):
@@ -16,6 +16,7 @@ class Command(BaseCommand):
         loop = uvloop.new_event_loop()
         asyncio.set_event_loop(loop)
 
+        feed_status_checker(loop=loop)
         parse_all_feeds(loop=loop)
         title_cleaner_from_db(loop=loop)
         update_db_with_cleaned_content(loop=loop)

@@ -26,7 +26,8 @@
 			{% endif %}
 				<div class="card-block">
 						<h3 class="card-title"><a href="{% url 'post_detail' post.slug %}">{{ post.title|safe|capfirst }}</a>&nbsp;<small class="text-active {{ sentiment_color }}">[{{ post.sentiment }}]</small></h3>
-							<h6 class="card-subtitle text-muted">Posted on {{ post.date }} by <a href="{{ base_url }}/source/{{ post.category.slug }}/">{{ post.category }}</a> @ <a href="{{ post.url }}" rel="nofollow">[direct link]</a></p>
+							<h6 class="card-subtitle text-muted">Posted on {{ post.date }} by <a href="{{ base_url }}/source/{{ post.category.slug }}/">{{ post.category }}</a> @
+								{% if post.feed.dead %}<a href="{% url 'post_detail' post.slug %}">[cached copy]</a>{% else %}<a href="{{ post.url }}" rel="nofollow">[source]</a>{% endif %}</p>
 				</div>
 				<div class="card-block">
 						{% if post.image %}<img src="{{ base_url }}/{{ post.image }}" class="img-responsive img-thumbnail">
