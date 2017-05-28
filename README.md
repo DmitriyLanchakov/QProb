@@ -15,12 +15,15 @@ All websites have their own theme and distribute summarized content through vari
 
 # Technologies
 
+* [Python](https://github.com/python/cpython) 3.6+
+* [Django](https://github.com/django/django) 1.11+
+* [Sanic](https://github.com/channelcat/sanic)
+* [aiomysql](https://github.com/aio-libs/aiomysql)
+* [uWSGI](https://github.com/unbit/uwsgi) 2.0.15
 * Nginx
-* uWSGI
-* memcached
+* [memcached](https://github.com/memcached/memcached)
 * MySQL
-* Python 3.6
-* Django 1.11
+* [Let's Encrypt](https://letsencrypt.org/)
 
 # TODO
 
@@ -30,8 +33,6 @@ All websites have their own theme and distribute summarized content through vari
 * Interlink.
 * MySQL, uWSGI, nginx, monit configs automation.
 * Archives
-* Redis as cache server.
-* Postgres as db option.
 * FIX Keywords/tags.
 * Related stories
 * URL shortener for Twitter statuses.
