@@ -117,7 +117,7 @@ async def generate_tweets_tag():
 
 # TODO this can be improved, definitely has duplicates
 def tweets__by_tag_to_db(loop):
-    tags = Tags.objects.filter(type='T').filter(financial=True)
+    tags = Tags.objects.filter(type='T').filter(active=True)
 
     loop.run_until_complete(asyncio.gather(*[generate_tweets_tag(\
         tag=tag, loop=loop) for tag in tags], \
@@ -128,7 +128,7 @@ def tweets__by_tag_to_db(loop):
 async def clean_tweet(tweet, replacements):
     for each in tweet.hashtags.split('Hashtag'):
         if 'Text' in each:
-            hashtag = replace_all(each.split('Text=')[1], replacements)
+            hashtag = await replace_all(each.split('Text=')[1], replacements)
             try:
                 tweet.tags.add(hashtag)
                 tag = Tags.objects.create(title=hashtag, type='T')
@@ -394,7 +394,21 @@ def clean_images_if_not_in_db(loop):
 async def download_image(url):
     try:
         source = requests.get(url, proxies=settings.PROXIES, headers=settings.HEADERS)
-        image_name = url.rsplit('/', 1)[-1].split('?', 1)[0].replace('%', '')
+        image_name_ = url.rsplit('/', 1)[-1].split('?', 1)[0]
+        replacements = {"%": "",
+            ")": "",
+            "]": "",
+            "'": "",
+            ",": "",
+            "-": "",
+            "_": "",
+            "=": ""}
+        img = await replace_all(image_name_, replacements)
+        print("img")
+        print(img)
+        image_name = img.split(".")[-2][:100] + "." + img.split(".")[-1]
+        print("image_name")
+        print(image_name)
         filename = join(settings.BASE_DIR, 'uploads', image_name)
 
         post = Post.objects.filter(image="uploads/{0}".format(image_name)).count()

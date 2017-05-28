@@ -49,8 +49,8 @@ urlpatterns = [
     url(r'^{}/search/'.format(settings.KEYWORD), include('haystack.urls')),
     url(r'^{}/api/$'.format(settings.KEYWORD), api_main, name='api_main'),
 ]
-
 if settings.DEV_ENV:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEFINITIONS_MODULE:

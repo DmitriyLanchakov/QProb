@@ -6,9 +6,8 @@ from os.path import join, dirname
 import requests
 from dotenv import load_dotenv
 
-BASE_DIR = dirname(dirname('__file__'))
-BASE_PATH = dirname(BASE_DIR)
-load_dotenv(join(BASE_PATH, '.env'))
+BASE_DIR = dirname(dirname(__file__))
+load_dotenv(join(BASE_DIR, '.env'))
 
 DEV_ENV  = int(environ.get("DEV_ENV"))
 
@@ -138,10 +137,10 @@ INSTALLED_APPS = [
 
 STATICFILES_DIRS = []
 
-MEDIA_ROOT = '{}uploads'.format(BASE_DIR)
-STATIC_ROOT = '{}static'.format(BASE_DIR)
-MEDIA_URL = '/'
-STATIC_URL = '/static/'
+MEDIA_ROOT = join(BASE_DIR, "uploads")
+STATIC_ROOT = join(BASE_DIR, "static")
+MEDIA_URL = "/uploads/"
+STATIC_URL = "/static/"
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -214,7 +213,7 @@ NOTIFICATIONS_ENABLED = True
 #SOCIAL_AUTH_EMAIL_VALIDATION_FUNCTION = 'collector.social_profile.SendVerificationEmail'
 #SOCIAL_AUTH_EMAIL_VALIDATION_URL = '/email_verify_sent/'
 
-def load_user_agents(uafile=join(BASE_PATH, 'user_agents.txt')):
+def load_user_agents(uafile=join(BASE_DIR, 'user_agents.txt')):
     uas = []
     with open(uafile, 'r') as uaf:
         for ua in uaf.readlines():
@@ -253,7 +252,7 @@ DATETIME_FORMAT = 'N j, Y, HH'
 SHORT_DATETIME_FORMAT = 'Y-m-d'
 DATE_FORMAT = 'N j, Y'
 
-DEBUG_FILE = join(BASE_PATH, "logs", "django.log")
+DEBUG_FILE = join(BASE_DIR, "logs", "django.log")
 
 LOGGING = {
     'version': 1,

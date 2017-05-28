@@ -10,7 +10,7 @@ from django.conf import settings
 from . import summarize
 
 
-def replace_all(text, dic):
+async def replace_all(text, dic):
     for i, j in list(dic.items()):
         text = text.replace(i, j)
     return text

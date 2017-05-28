@@ -24,9 +24,9 @@ class SourcesAdmin(admin.ModelAdmin):
     search_fields = ('feed', 'twitter_handle')
 
 class TagsAdmin(admin.ModelAdmin):
-    list_display = ('title', 'financial')
-    list_filter = ('financial', 'type')
-    search_fields = ('title', 'type')
+    list_display = ('title', 'active')
+    list_filter = ('active', 'tag_type')
+    search_fields = ('title', 'tag_type')
 
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('title', 'slug')
