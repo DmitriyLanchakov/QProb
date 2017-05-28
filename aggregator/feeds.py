@@ -32,7 +32,7 @@ class LatestArticlesFeed(Feed):
         return item.category
 
     def item_link(self, item):
-        return "{0}{1}/".format(settings.DOMAIN, item.slug)
+        return "{0}{1}/".format(settings.BASE_URL, item.slug)
 
     def item_description(self, item):
         text = item.summary or ""

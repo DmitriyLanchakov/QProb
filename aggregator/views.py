@@ -250,9 +250,9 @@ class TwitsListView(ListView):
 
     def get_queryset(self):
 
-        query_set = super(TwitsListView, self).get_queryset()[:5000]
+        query_set = super(TwitsListView, self).get_queryset()
 
-        main_qs = query_set.order_by('date').reverse()
+        main_qs = query_set.order_by('date').reverse()[:5000]
 
         if self.kwargs:
             try:
@@ -349,7 +349,7 @@ if settings.RESEARCH_MODULE:
         from .models import ScienceCat
 
         cats = ScienceCat.objects.all()
-        return render(request, '{}}/science_cats.html'.format(settings.TEMPLATE_NAME), {'science_cats': cats})
+        return render(request, '{}/science_cats.html'.format(settings.TEMPLATE_NAME), {'science_cats': cats})
 
 
 if settings.DEFINITIONS_MODULE:
@@ -391,10 +391,8 @@ def sentiment_view(request):
     period = datetime.datetime(today.year, today.month, 1) - datetime.timedelta(days=252)
     sentiments_obj = Post.objects.filter(date__gte=period)
     avg = sentiments_obj.aggregate(Avg('sentiment'))
-    sentiments = [{"date": s["date"], "sentiment": \
-        (float(s["sentiment"]) - avg["sentiment__avg"]) } for s \
-        in sentiments_obj.order_by('date').values('date', \
-        'sentiment')]
+    sentiments = [{"date": s["date"], "sentiment": (float(s["sentiment"] or 0.0) - avg["sentiment__avg"]) } for s \
+        in sentiments_obj.order_by('date').values('date', 'sentiment')]
 
     return render(request, '{}/sentiments.html'.format(settings.TEMPLATE_NAME), {'sentiments': sentiments})
 
@@ -413,9 +411,11 @@ class ArticleDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(ArticleDetailView, self).get_context_data(**kwargs)
 
-        if context['object'].sentiment > 0:
+        sentiment = context['object'].sentiment or 0.0
+
+        if sentiment > 0:
             sentiment_color = 'bg-success'
-        elif context['object'].sentiment < 0:
+        elif sentiment < 0:
             sentiment_color = 'bg-danger'
         else:
             sentiment_color = 'bg-warning'

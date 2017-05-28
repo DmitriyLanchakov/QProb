@@ -11,16 +11,24 @@ def main():
         if settings.DEV_ENV:
             app.run(host=settings.API_HOST, port=settings.DEV_PORT, debug=settings.DEBUG)
         else:
-            try:
-                addr = '/tmp/{}_api_sock'.format(settings.FOLDER)
-                unlink(addr)
-            except OSError:
-                    if exists(addr):
-                        raise
-            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            sock.bind(addr)
-
-            app.run(host=None, port=None, sock=sock, debug=settings.DEBUG, workers=settings.API_WORKERS)
+            #FIXME in case switching back to nginx + Sanic
+            #try:
+                #addr = '/tmp/{}_api_sock'.format(settings.FOLDER)
+                #unlink(addr)
+            #except OSError:
+                    #if exists(addr):
+                        #raise
+            #sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            #sock.bind(addr)
+            #app.run(host=None, port=None, sock=sock, debug=settings.DEBUG, workers=settings.API_WORKERS, log_config=None)
+            ssl = {'cert': "/etc/letsencrypt/live/{}/fullchain.pem".format(settings.API_HOST),
+                'key': "/etc/letsencrypt/live/{}/privkey.pem".format(settings.API_HOST)}
+            app.run(host=settings.API_HOST,
+                port=settings.PORT,
+                sock=None, debug=settings.DEBUG,
+                workers=settings.API_WORKERS,
+                ssl=ssl,
+                log_config=None)
     except KeyboardInterrupt:
         pass
 

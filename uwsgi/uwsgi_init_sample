@@ -4,4 +4,5 @@ stop on runlevel [!2345]
 
 respawn
 
-exec /bin/bash /home/<project>/uwsgi.sh
+PROJECT=<project_name>
+exec /bin/bash /home/$PROJECT/uwsgi/uwsgi.sh

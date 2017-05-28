@@ -17,6 +17,7 @@ import settings
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 loop = asyncio.get_event_loop()
 app = Sanic(__name__)
+app.config.KEEP_ALIVE = False
 reloader = LiveReloader()
 reloader.start_watcher_thread()
 
@@ -37,11 +38,12 @@ async def home(request):
 @lru_cache(maxsize=None)
 @app.route("/posts/", methods=["GET"])
 async def posts(request):
+    print(request)
     async with app.pool['aiomysql'].acquire() as conn:
         async with conn.cursor(DictCursor) as cur:
             await cur.execute("SELECT title, slug, url, summary, date, \
                 sentiment, image, category_id FROM aggregator_post \
-                ORDER BY date ASC LIMIT 100;")
+                ORDER BY date DESC  LIMIT 100;")
             value = await cur.fetchall()
             return json({'data': value })
 
@@ -62,10 +64,10 @@ async def posts_by_cat(request, cat_slug):
     async with app.pool['aiomysql'].acquire() as conn:
         async with conn.cursor(DictCursor) as cur:
             await cur.execute("SELECT posts.title, posts.slug, posts.url, \
-                posts.summary, posts.date, posts.sentiment, posts.image, \
+                posts.summary, posts.date AS dt, posts.sentiment, posts.image, \
                 cats.slug AS cat FROM aggregator_post AS posts INNER JOIN \
                 aggregator_category AS cats ON posts.category_id = cats.title \
-                WHERE cats.slug=%s LIMIT 100;", (cat_slug,))
+                WHERE cats.slug=%s ORDER BY dt DESC LIMIT 100;", (cat_slug,))
             value = await cur.fetchall()
             return json({'data': value })
 

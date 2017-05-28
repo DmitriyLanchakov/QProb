@@ -15,17 +15,17 @@
 
   <h3>Access point</h3>
   <ul>
-    <li>{{ api_domain }}</li>
+    <li>https://{{ api_domain }}:8080</li>
   </ul>
   <h3>Endpoints</h3>
   <ul>
     <li>Posts: /posts/</li>
     <li>Categories: /cats/</li>
     <li>Posts by category slug<sup>1</sup>: /posts/&lt;cat_slug&gt;/</li>
-    <li>Post by post slug<sup>2</sup>: /post/&lt;slug&gt;</li>
+    <li>Post by post slug<sup>2</sup>: /post/&lt;post_slug&gt;</li>
   </ul>
-  <p><sup>1</sup> Get category slugs from categories endpoint.</p>
-  <p><sup>2</sup> Get post slug from post by category or posts endpoint.</p>
+  <p><small><sup>1</sup> Get category slugs from categories endpoint.</small></p>
+  <p><small><sup>2</sup> Get post slug from post by category or posts endpoint.</small></p>
   <h3>Formats, methods</h3>
   <ul>
     <li>json, get</li>

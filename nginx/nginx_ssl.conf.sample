@@ -3,6 +3,8 @@ upstream django {
 }
 
 server {
+    set $domain "";
+    set $project "";
     listen          443 ssl;
     listen [::]:443;
     server_name     <domain>;
@@ -11,8 +13,8 @@ server {
     #access_log      /var/log/nginx/<domain>_access.log combined;
     error_log       /var/log/nginx/<domain>_error.log error;
 
-    ssl_certificate         /etc/letsencrypt/live/<domain>/fullchain.pem;
-    ssl_certificate_key     /etc/letsencrypt/live/<domain>/privkey.pem;
+    ssl_certificate         /etc/letsencrypt/live/$domain/fullchain.pem;
+    ssl_certificate_key     /etc/letsencrypt/live/$domain/privkey.pem;
 
     ssl_session_timeout 1d;
     ssl_session_cache shared:SSL:50m;
@@ -41,50 +43,49 @@ server {
     location ^~ /.well-known {
         allow all;
         auth_basic off;
-        alias /home/<project_name>/.well-known/;
+        alias /home/$project/.well-known/;
     }
 
     # Django media
-    location /uploads/  {
+        location /uploads/  {
 	      autoindex on;
         expires 30d;
         include /etc/nginx/mime.types;
-        alias /home/<project_name>/uploads/;
+        alias /home/$project/uploads/;
         add_header Cache-Control "public";
     }
 
     location /static/ {
-	autoindex on;
+	      autoindex on;
         expires 30d;
         include /etc/nginx/mime.types;
-        alias /home/<project_name>/static/;
+        alias /home/$project/static/;
         add_header Cache-Control "public";
     }
 
     location /favicon.ico {
-        alias /home/<project_name>/uploads/web/favicon.ico;
+        alias /home/$project/uploads/web/favicon.ico;
     }
 
     location /robots.txt {
-        alias /home/<project_name>/static/robots.txt;
+        alias /home/$project/static/robots.txt;
     }
 }
 
 server {
     listen 80;
     server_name <domain>;
-    rewrite ^(.*) https://<domain>$1 permanent;
+    return 301 https://$server_name$request_uri;
 }
 
 server {
     listen 80;
     server_name www.<domain>;
-    rewrite ^(.*) https://<domain>$1 permanent;
+    return 301 https://$server_name$request_uri;
 }
-
 
 server {
     listen 443;
     server_name www.<domain>;
-    rewrite ^ https://<domain>$uri permanent;
+    return 301 https://$server_name$request_uri;
 }

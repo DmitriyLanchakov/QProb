@@ -11,6 +11,7 @@ DEV_ENV = int(environ.get("DEV_ENV"))
 DEBUG = DEV_ENV
 
 if DEV_ENV:
+    API_HOST = environ.get("API_HOST")
     DATABASE_HOST = environ.get("DEV_DB_HOST")
     DATABASE_USER = environ.get("DEV_DATABASE_USER")
     DATABASE_PASSWORD = environ.get("DEV_DATABASE_PASSWORD")
@@ -20,13 +21,14 @@ else:
     DATABASE_USER = environ.get("DATABASE_USER")
     DATABASE_PASSWORD = environ.get("DATABASE_PASSWORD")
     DATABASE_NAME = '{}'.format(environ.get("DATABASE_NAME"))
+    API_HOST = "api.{}".format(environ.get("HOST"))
 
 DATABASE_PORT = int(environ.get("DATABASE_PORT"))
 
-API_HOST = environ.get("API_HOST")
 API_WORKERS = int(environ.get("API_WORKERS"))
 FOLDER = environ.get("SITE_FOLDER")
 DEV_PORT = environ.get("DEV_PORT")
+PORT = 8080
 
 REDIRECT_HTML = """
 <html xmlns="http://www.w3.org/1999/xhtml">

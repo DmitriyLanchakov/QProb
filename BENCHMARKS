@@ -1,0 +1,43 @@
+# API (Sanic)
+
+2017-05-27, w/o ssl.
+
+## 100 posts:
+
+```text
+Running 1m test @ http://api.qprob.com:8080/posts/
+  6 threads and 20 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   164.30ms  107.91ms   1.14s    80.35%
+    Req/Sec    19.96      8.86    50.00     41.39%
+  6819 requests in 1.00m, 340.89MB read
+Requests/sec:    113.50
+Transfer/sec:      5.67MB
+```
+
+## Posts by category
+
+```text
+Running 1m test @ http://api.qprob.com:8080/posts/meb_faber_research_stock_market_and/
+  6 threads and 20 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    74.88ms   82.90ms   1.56s    96.33%
+    Req/Sec    44.74     21.60   111.00     67.67%
+  15865 requests in 1.00m, 674.00MB read
+Requests/sec:    264.00
+Transfer/sec:     11.22MB
+```
+
+# 1 post
+
+```text
+Running 1m test @ http://api.qprob.com:8080/post/why_you_should_ask_for_uranium_stocks_in_your_stocking_this_holiday_season/
+  6 threads and 20 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   238.85ms  132.99ms   1.95s    84.96%
+    Req/Sec    14.18      7.01    50.00     82.96%
+  4633 requests in 1.00m, 3.14MB read
+  Socket errors: connect 0, read 0, write 0, timeout 2
+Requests/sec:     77.10
+Transfer/sec:     53.53KB
+```
