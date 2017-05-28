@@ -563,6 +563,13 @@ async def get_data_from_feed(feed, posts, loop):
         else:
             err = data.bozo_exception
             print(colored.red("Feed {0} is malformed: {1}".format(feed, err)))
+            s = Sources.objects.get(feed=feed)
+            if s.failures < 5:
+                s.failures = s.failures + 1
+            else:
+                s.failures = s.failures + 1
+                s.active = False
+            s.save()
     except Exception as e:
         print(colored.red("At get_data_from_feed {}".format(e)))
 

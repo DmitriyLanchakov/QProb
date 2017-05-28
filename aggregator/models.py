@@ -258,6 +258,7 @@ class Sources(models.Model):
     email = models.EmailField(max_length=60, verbose_name=T("Your email"), blank=True, null=True)
     twitter_handle = models.CharField(max_length=30, verbose_name=T("Twitter handle"), blank=True, null=True)
     active =  models.BooleanField(default=False)
+    failures = models.SmallIntegerField(verbose_name=T("Failures"), default=0)
 
     def __unicode__(self):
         return '(%s) %s %s' %(self.feed, self.twitter_handle, self.name)
