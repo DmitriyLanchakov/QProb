@@ -20,6 +20,7 @@ if DEV_ENV:
     BASE_URL = environ.get("DEV_BASE_URL")
 else:
     BASE_URL = environ.get("BASE_URL")
+DOMAIN = BASE_URL
 HOST = environ.get("HOST")
 IP = environ.get("IP")
 KEYWORD = environ.get("KEYWORD")
@@ -124,7 +125,7 @@ AD_CODE = """
 """
 
 INSTALLED_APPS = [
-    'django.contrib.sites',
+    #'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -139,7 +140,6 @@ STATICFILES_DIRS = []
 
 MEDIA_ROOT = join(BASE_DIR, "uploads")
 STATIC_ROOT = join(BASE_DIR, "static")
-MEDIA_URL = "/uploads/"
 STATIC_URL = "/static/"
 
 STATICFILES_FINDERS = (

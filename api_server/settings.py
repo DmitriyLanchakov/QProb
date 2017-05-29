@@ -11,7 +11,7 @@ DEV_ENV = int(environ.get("DEV_ENV"))
 DEBUG = DEV_ENV
 
 if DEV_ENV:
-    API_HOST = environ.get("API_HOST")
+    API_HOST = environ.get("DEV_API_HOST")
     DATABASE_HOST = environ.get("DEV_DB_HOST")
     DATABASE_USER = environ.get("DEV_DATABASE_USER")
     DATABASE_PASSWORD = environ.get("DEV_DATABASE_PASSWORD")
@@ -21,7 +21,7 @@ else:
     DATABASE_USER = environ.get("DATABASE_USER")
     DATABASE_PASSWORD = environ.get("DATABASE_PASSWORD")
     DATABASE_NAME = '{}'.format(environ.get("DATABASE_NAME"))
-    API_HOST = "api.{}".format(environ.get("HOST"))
+    API_HOST = "api.{}".format(environ.get("API_HOST"))
 
 DATABASE_PORT = int(environ.get("DATABASE_PORT"))
 

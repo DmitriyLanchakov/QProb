@@ -27,7 +27,7 @@
 	{% if object.image %}
 		<div class="card">
 			<div class="card-block">
-				<img src="{{ base_url }}/{{ object.image.url }}" class="img-responsive img-thumbnail">
+				<img src="{{ base_url }}{{ object.image.url }}" class="img-responsive img-thumbnail">
 			</div>
 		</div>
 	{% endif %}

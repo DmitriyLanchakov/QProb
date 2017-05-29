@@ -218,6 +218,7 @@ async def posts_to_db(row, loop):
                 await face_publish(data=row)
 
             if settings.GET_AMAZON:
+                print("Going to Amazon...")
                 await parse_amazon(title=row['title'], loop=loop)
         except Exception as e:
             print(colored.red("[ERROR] At post to db: {0}".format(e)))
@@ -385,7 +386,7 @@ async def check_db(fle):
 
 
 def clean_images_if_not_in_db(loop):
-    path = filename = join(settings.BASE_DIR, 'uploads')
+    path = join(settings.BASE_DIR, 'uploads')
     filenames = [f for f in listdir(path) if isfile(join(path, f))]
 
     loop.run_until_complete(asyncio.gather(*[check_db(\
@@ -515,7 +516,7 @@ async def content_creation(data, feed, category, loop):
                 row['image_url'] = None
             if len(body.text) > 0:
                 row['working_content'] = body.text
-                row['cleaned_text'] = await text_cleaner(data=st)
+                row['cleaned_text'] = await text_cleaner(data=body.text)
             else:
                 row['working_content'] = None
                 row['cleaned_text'] = None
