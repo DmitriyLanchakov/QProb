@@ -355,7 +355,7 @@ def content_if_empty_all(loop):
 async def check_img(filenames, post):
     try:
         if not (post.image in filenames):
-            if (not (post.image == "")) | (not (post.image is None)):
+            if (not (post.image == "")) | (not (not post.image)):
                 post.image = None
                 post.save()
                 print(colored.green("Updated image as : {0}".format(post.image)))
@@ -407,8 +407,6 @@ async def download_image(url):
             "_": "",
             "=": ""}
         img = await replace_all(image_name_, replacements)
-        print("img")
-        print(img)
         image_name = img.split(".")[-2][:100] + "." + img.split(".")[-1]
         filename = join(settings.BASE_DIR, 'uploads', image_name)
 
@@ -646,7 +644,9 @@ async def check_status(source):
         if r.status_code != 200:
            source.dead = True
            source.active = False
-           source.save()
+        else:
+            source.dead = False
+        source.save()
     except Exception as e:
         print(colored.red("At live_status {}".format(e)))
 

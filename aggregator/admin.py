@@ -19,7 +19,7 @@ class PostAdmin(admin.ModelAdmin):
     date_hierarchy = 'date'
 
 class SourcesAdmin(admin.ModelAdmin):
-    list_display = ('feed', 'twitter_handle', 'name', 'email', 'failures')
+    list_display = ('feed', 'twitter_handle', 'name', 'email', 'active', 'dead', 'failures')
     list_filter = ('active', 'name')
     search_fields = ('feed', 'twitter_handle')
 
