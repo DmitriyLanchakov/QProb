@@ -107,7 +107,7 @@ if settings.DEFINITIONS_MODULE:
                     return main_qs
 
                 try:
-                    qs = query_set.filter(term__startswith=str(self.term_slug).title())
+                    qs = query_set.filter(term__startswith=self.term_slug).title()
                     return qs
                 except:
                     return main_qs

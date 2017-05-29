@@ -143,7 +143,7 @@
 			<blockquote class="card-blockquote">
 				<h5 class="display-5">{% if object.feed.dead %}@{{ object.category }} isn't responding, this is cached copy from <a href="{{ base_url }}/">{{ first_page_title }}</a>*.
 				{% else %}<a href="{{ object.url }}" class="text-info">Read @{{ object.category }}</a>{% endif %}- {{ object.date }}</h5>
-				<p><small>* If we have it.</small></p>
+				{% if object.feed.dead %}<p><small>* If we have it.</small></p>{% endif %}
 			</blockquote>
 		</div>
 	</div>
